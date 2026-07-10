@@ -1,6 +1,6 @@
 # games — PROJECT STATUS
 
-Last updated: 2026-07-10
+Last updated: 2026-07-10 (v2)
 
 ## Why / What
 
@@ -47,6 +47,16 @@ leaderboards/backend, monetization, accounts.
 
 ## Features (shipped)
 
+- idle-startup v2 "real company" update: five departments with distinct
+  powers (eng revenue / product multiplies eng / GTM multiplies ships /
+  people discounts hires / finance extends offline), salaries + burn +
+  runway meter, raise-until-you-crash funding loop (crash keeps investors
+  + research), ad campaigns with dice outcomes, lucky-event bubbles,
+  timed research lab with royalties (research-first companies viable),
+  13 milestones each teaching a company-building lesson, procedural
+  cartoon avatars (founder picker + choose-your-candidate hiring + team
+  faces strip), company clock (30s = 1 month), cartoon animation pass —
+  41 unit tests
 - gamekit framework: Platform adapter (WebPlatform/YtPlatform + factory),
   fixed-timestep loop with background watchdog, versioned save manager with
   migrations + 64 KiB guard, capped offline progress, K/M/B/T…aa number
