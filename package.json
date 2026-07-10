@@ -1,0 +1,20 @@
+{
+  "name": "games",
+  "private": true,
+  "packageManager": "pnpm@10.33.2",
+  "scripts": {
+    "dev": "pnpm --filter @games/idle-startup dev",
+    "dev:hub": "pnpm --filter @games/hub dev",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "build": "pnpm -r build && node scripts/assemble-site.mjs",
+    "build:yt": "pnpm --filter @games/idle-startup build:yt",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "preview": "pnpm --filter @games/idle-startup preview"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.11"
+  }
+}

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Idle Startup — embed harness</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        background: #f5f4f0;
+        color: #222;
+        padding: 24px;
+      }
+      h1 {
+        font-size: 1.1rem;
+      }
+      p {
+        color: #666;
+        font-size: 0.85rem;
+      }
+      .grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        align-items: flex-start;
+        margin-top: 20px;
+      }
+      figure {
+        margin: 0;
+      }
+      figcaption {
+        font-size: 0.75rem;
+        color: #888;
+        margin-bottom: 6px;
+        font-family: monospace;
+      }
+      iframe {
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        background: #0b0e1a;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Embed harness — the exact iframe matrix websites and YT Playables impose</h1>
+    <p>Run <code>pnpm build &amp;&amp; pnpm preview</code> first (serves dist/web at :4173).</p>
+    <div class="grid">
+      <figure>
+        <figcaption>9:16 phone portrait — 390×760</figcaption>
+        <iframe src="http://localhost:4173/" width="390" height="760" title="Idle Startup 9:16"></iframe>
+      </figure>
+      <figure>
+        <figcaption>1:1 square — 600×600</figcaption>
+        <iframe src="http://localhost:4173/" width="600" height="600" title="Idle Startup 1:1"></iframe>
+      </figure>
+      <figure>
+        <figcaption>16:9 wide — 1100×500</figcaption>
+        <iframe src="http://localhost:4173/" width="1100" height="500" title="Idle Startup 16:9"></iframe>
+      </figure>
+    </div>
+  </body>
+</html>

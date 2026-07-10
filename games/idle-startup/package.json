@@ -1,0 +1,24 @@
+{
+  "name": "@games/idle-startup",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "vite build",
+    "build:yt": "vite build --mode yt && cd dist/yt && rm -f ../idle-startup-yt.zip && zip -rq ../idle-startup-yt.zip .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@fontsource-variable/jetbrains-mono": "^5.2.8",
+    "@fontsource-variable/space-grotesk": "^5.2.8",
+    "@games/gamekit": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "vite": "^7.3.4",
+    "vitest": "^3.2.4"
+  }
+}
