@@ -5,6 +5,7 @@
 
 import { renderAvatar } from "./avatar";
 import { OFFICES } from "./content";
+import { pic } from "./img";
 import { currentOffice, grossPerSec } from "./sim";
 import type { GameState } from "./state";
 
@@ -154,6 +155,7 @@ export function createOfficeScene(host: HTMLElement): OfficeScene {
       chip.style.setProperty("--bob-delay", `${(i * 0.37) % 2.2}s`);
       chip.title = person.title;
       renderAvatar(chip, person.seed);
+      if (i === seated.length - 1 && seated.length > 1) chip.classList.add("enter");
       crew.append(chip);
     });
     const extra = state.team.length - (SLOTS.length - 1);
@@ -166,9 +168,12 @@ export function createOfficeScene(host: HTMLElement): OfficeScene {
   };
 
   const spawnCoin = () => {
-    const coin = COIN_POOL.pop() ?? document.createElement("span");
-    coin.className = "scene-coin";
-    coin.textContent = "🪙";
+    let coin = COIN_POOL.pop();
+    if (!coin) {
+      coin = document.createElement("span");
+      coin.className = "scene-coin";
+      coin.append(pic("🪙", "coin-img"));
+    }
     const slot = SLOTS[Math.floor(Math.random() * SLOTS.length)] ?? [50, 60];
     coin.style.left = `${slot[0] + (Math.random() - 0.5) * 6}%`;
     coin.style.top = `${slot[1]}%`;
@@ -194,13 +199,14 @@ export function createOfficeScene(host: HTMLElement): OfficeScene {
         lastOffice = officeIdx;
         drawBackdrop(backdrop, officeIdx);
         const office = currentOffice(state);
-        sign.textContent = `${office.emoji} ${office.name}`;
+        sign.textContent = "";
+        sign.append(pic(office.emoji, "sign-img"), document.createTextNode(office.name));
         propsLayer.textContent = "";
         const look = TIER_LOOKS[officeIdx] ?? TIER_LOOKS[0];
         (look?.props ?? []).forEach((glyph, i) => {
           const prop = document.createElement("span");
           prop.className = "scene-prop";
-          prop.textContent = glyph;
+          prop.append(pic(glyph, "prop-img"));
           prop.style.left = `${6 + i * 27}%`;
           prop.style.top = "38%";
           propsLayer.append(prop);

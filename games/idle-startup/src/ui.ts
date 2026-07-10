@@ -15,6 +15,7 @@ import {
   traitById,
   type UpgradeDef,
 } from "./content";
+import { pic } from "./img";
 import { createOfficeScene } from "./office-scene";
 import {
   availableUpgrades,
@@ -265,8 +266,9 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
   // ---- static structure -------------------------------------------------
   const backdrop = el("div", "backdrop");
   for (const [i, glyph] of ["🚀", "⭐", "💡", "📦", "☁️"].entries()) {
-    const float = el("span", "floaty", glyph);
+    const float = el("span", "floaty");
     float.style.setProperty("--i", String(i));
+    float.append(pic(glyph, "floaty-img"));
     backdrop.append(float);
   }
   app.append(backdrop);
@@ -317,7 +319,7 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
   const questCard = el("div", "card quest-card");
   const questGoal = el("span", "quest-goal", "");
   const questReward = el("span", "quest-reward", "");
-  questCard.append(el("span", "quest-emoji", "🎯"), questGoal, questReward);
+  questCard.append(pic("🎯", "quest-emoji"), questGoal, questReward);
 
   // actions: ad campaign (dice) + research lab
   const actionsCard = el("div", "card actions-card");
@@ -325,8 +327,9 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
   const adBtn = el("button", "action-btn ad-btn");
   const adMeta = el("span", "action-meta", "");
   adBtn.append(
-    el("span", "action-label", "📣 Ad campaign"),
-    el("span", "action-dice", "🎲"),
+    pic("📣", "action-icon"),
+    el("span", "action-label", "Ad campaign"),
+    pic("🎲", "action-dice"),
     adMeta,
   );
   adBtn.addEventListener("click", () => {
@@ -335,15 +338,16 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
   });
   const labBtn = el("button", "action-btn lab-btn");
   const labMeta = el("span", "action-meta", "");
-  labBtn.append(el("span", "action-label", "🔬 Research"), labMeta);
+  labBtn.append(pic("🔬", "action-icon"), el("span", "action-label", "Research"), labMeta);
   labBtn.addEventListener("click", () => hooks.onResearch());
   const labBar = el("div", "lab-bar hidden");
   const labFill = el("div", "lab-fill");
   labBar.append(labFill);
   const officeBtn = el("button", "action-btn office-btn");
-  const officeLabel = el("span", "action-label", "🚗 The garage");
+  const officeIcon = el("span", "action-icon office-icon");
+  const officeLabel = el("span", "action-label", "The garage");
   const officeMeta = el("span", "action-meta", "");
-  officeBtn.append(officeLabel, officeMeta);
+  officeBtn.append(officeIcon, officeLabel, officeMeta);
   officeBtn.addEventListener("click", () => {
     if (!reducedMotion) boing(officeBtn);
     hooks.onOffice();
@@ -381,12 +385,7 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
     tile.style.setProperty("--dept-h", String(dept.hue));
     const count = el("span", "tile-count", "0");
     const value = el("span", "tile-value", "—");
-    tile.append(
-      el("span", "tile-icon", dept.icon),
-      el("span", "tile-name", dept.name),
-      count,
-      value,
-    );
+    tile.append(pic(dept.icon, "tile-icon"), el("span", "tile-name", dept.name), count, value);
     tileBoard.append(tile);
     deptTiles.set(dept.id, { count, value });
   }
@@ -673,8 +672,9 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
     const root = el("button", "gen-row hidden");
     root.type = "button";
     root.style.setProperty("--medal-h", String(deptHue(def.id)));
-    const emoji = el("span", "gen-medal", def.emoji);
+    const emoji = el("span", "gen-medal");
     emoji.setAttribute("aria-hidden", "true");
+    emoji.append(pic(def.emoji, "medal-img"));
     const body = el("div", "gen-body");
     const nameLine = el("div", "gen-name", def.name);
     const count = el("span", "gen-count", "");
@@ -717,8 +717,10 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
         chip.textContent = generatorById(def.target)?.name.toLowerCase() ?? def.target;
         chip.style.setProperty("--chip-h", String(deptHue(def.target)));
       }
+      const nameRow = el("div", "upg-name");
+      nameRow.append(pic(def.emoji, "upg-icon"), document.createTextNode(def.name));
       card.append(
-        el("div", "upg-name", `${def.emoji} ${def.name}`),
+        nameRow,
         el("div", "upg-flavor", def.flavor),
         chip,
         el("div", "upg-cost", money(def.cost)),
@@ -762,6 +764,23 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
     celebration.append(el("div", "celebration-title", title), el("div", "celebration-sub", sub));
     celebration.classList.remove("hidden");
     rainConfetti(celebration, 44);
+    if (!reducedMotion) {
+      for (let i = 0; i < 7; i++) {
+        const b = pic("🎈", "balloon");
+        b.style.left = `${8 + Math.random() * 84}%`;
+        celebration.append(b);
+        b.animate(
+          [
+            { transform: "translateY(110vh) rotate(-6deg)", opacity: 1 },
+            {
+              transform: `translateY(-20vh) rotate(${(Math.random() - 0.5) * 24}deg)`,
+              opacity: 0.9,
+            },
+          ],
+          { duration: 2400 + Math.random() * 1200, delay: Math.random() * 350, easing: "ease-in" },
+        );
+      }
+    }
     clearTimeout(celebrationTimer);
     celebrationTimer = setTimeout(() => celebration.classList.add("hidden"), 3000);
   };
@@ -794,7 +813,7 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
     removeLuckBubble();
     const bubble = el("button", "luck-bubble");
     bubble.type = "button";
-    bubble.textContent = "💎";
+    bubble.append(pic("💎", "luck-img"));
     bubble.setAttribute("aria-label", "Lucky event — grab it!");
     bubble.style.left = `${12 + Math.random() * 70}%`;
     bubble.style.top = `${18 + Math.random() * 55}%`;
@@ -1041,7 +1060,12 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
     // office
     const office = currentOffice(state);
     const nextHq = nextOffice(state);
-    officeLabel.textContent = `${office.emoji} ${office.name}`;
+    officeLabel.textContent = office.name;
+    if (officeIcon.dataset.tier !== String(state.officeIndex)) {
+      officeIcon.dataset.tier = String(state.officeIndex);
+      officeIcon.textContent = "";
+      officeIcon.append(pic(office.emoji, "action-icon-img"));
+    }
     if (nextHq) {
       officeMeta.textContent = `→ ${nextHq.emoji} ${money(nextHq.cost)} · ×${nextHq.morale} morale · rent ${money(nextHq.rent)}/day`;
       officeBtn.disabled = state.cash < nextHq.cost;

@@ -14,7 +14,8 @@
   "dependencies": {
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@fontsource-variable/space-grotesk": "^5.2.8",
-    "@games/gamekit": "workspace:*"
+    "@games/gamekit": "workspace:*",
+    "@twemoji/svg": "^15.0.0"
   },
   "devDependencies": {
     "typescript": "^5.7.3",

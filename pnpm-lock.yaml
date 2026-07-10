@@ -39,6 +39,9 @@ importers:
       '@games/gamekit':
         specifier: workspace:*
         version: link:../../packages/gamekit
+      '@twemoji/svg':
+        specifier: ^15.0.0
+        version: 15.0.0
     devDependencies:
       typescript:
         specifier: ^5.7.3
@@ -420,6 +423,9 @@ packages:
     resolution: {integrity: sha512-BfzEnDJOt9T8M989/lA37EcJgat01wLRnoi5dQf3QzOH7jzpqTAzdDbVfRljVr5r+jzKqpbHeyOfAaXxAd0PAA==}
     cpu: [x64]
     os: [win32]
+
+  '@twemoji/svg@15.0.0':
+    resolution: {integrity: sha512-ZSPef2B6nBaYnfgdTbAy4jgW95o7pi2xPGwGCU+WMTxo7J6B1lMPTWwSq/wTuiMq+N0khQ90CcvYp1wFoQpo/w==}
 
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
@@ -873,6 +879,8 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.62.2':
     optional: true
+
+  '@twemoji/svg@15.0.0': {}
 
   '@types/chai@5.2.3':
     dependencies:

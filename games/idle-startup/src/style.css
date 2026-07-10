@@ -1629,3 +1629,152 @@ body.paused *::after {
   border-radius: 999px;
   padding: 4px 10px;
 }
+
+/* ================= illustrated sprites & new motion ================= */
+
+.gen-medal .medal-img {
+  width: 26px;
+  height: 26px;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+}
+
+img.tile-icon {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 2px;
+}
+
+.action-icon {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.action-icon img {
+  width: 100%;
+  height: 100%;
+}
+
+img.action-dice {
+  width: 20px;
+  height: 20px;
+  animation: dice-wiggle 2.6s ease-in-out infinite;
+}
+
+@keyframes dice-wiggle {
+  0%,
+  78%,
+  100% {
+    transform: rotate(0deg);
+  }
+  84% {
+    transform: rotate(-24deg) scale(1.15);
+  }
+  92% {
+    transform: rotate(18deg) scale(1.1);
+  }
+}
+
+img.quest-emoji {
+  width: 22px;
+  height: 22px;
+}
+
+.upg-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  vertical-align: -2px;
+  display: inline-block;
+}
+
+.luck-img {
+  width: 30px;
+  height: 30px;
+}
+
+.floaty-img {
+  width: 26px;
+  height: 26px;
+  display: block;
+}
+
+.prop-img {
+  width: clamp(18px, 5.5vw, 26px);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.5));
+}
+
+.sign-img {
+  width: 15px;
+  height: 15px;
+  margin-right: 5px;
+  vertical-align: -3px;
+  display: inline-block;
+}
+
+.coin-img {
+  width: 16px;
+  height: 16px;
+  display: block;
+  animation: coin-spin 0.9s linear infinite;
+}
+
+@keyframes coin-spin {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+.balloon {
+  position: absolute;
+  bottom: -12vh;
+  width: 34px;
+  height: 34px;
+  will-change: transform, opacity;
+}
+
+/* affordable rows invite the tap with a slow shimmer */
+.gen-row {
+  position: relative;
+  overflow: hidden;
+}
+
+.gen-row.affordable::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 35%,
+    hsl(var(--medal-h) 80% 75% / 0.09) 50%,
+    transparent 65%
+  );
+  transform: translateX(-130%);
+  animation: sheen 3.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* the newest hire pops into their seat */
+.scene-person.enter {
+  animation:
+    seat-pop 600ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    seat-bob 2.4s ease-in-out 600ms infinite alternate;
+}
+
+@keyframes seat-pop {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(1.25);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}

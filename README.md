@@ -56,6 +56,13 @@ Local proof: `pnpm build && pnpm preview`, then open
 3. Register it in `apps/hub/src/games.ts` so the hub lists it and
    `scripts/assemble-site.mjs` copies its build to `/play/<id>/`.
 
+## Asset licenses
+
+- Emoji artwork: [Twemoji](https://github.com/jdecked/twemoji) © Twitter, Inc
+  and contributors, licensed CC-BY 4.0 (bundled via `@twemoji/svg`, no
+  runtime fetches). Fonts via Fontsource (OFL). Everything else is
+  original/procedural.
+
 ## YouTube Playables constraints baked into this repo
 
 Initial bundle <30 MB (ours ≪1 MB) · load <5 s · save ≤64 KiB guarded in
