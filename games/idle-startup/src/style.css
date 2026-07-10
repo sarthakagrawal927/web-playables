@@ -1529,3 +1529,103 @@ body.paused *::after {
   color: var(--text-dim);
   line-height: 1.4;
 }
+
+/* ================= the office diorama ================= */
+
+.scene-card {
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+  aspect-ratio: 39 / 20;
+  border-color: var(--line-bright);
+}
+
+.scene-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.scene-props,
+.scene-crew,
+.scene-coins {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.scene-prop {
+  position: absolute;
+  font-size: clamp(0.9rem, 3.4vw, 1.2rem);
+  opacity: 0.9;
+}
+
+.scene-person {
+  position: absolute;
+  width: clamp(30px, 9.5vw, 40px);
+  height: clamp(30px, 9.5vw, 40px);
+  border-radius: 50%;
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(233, 236, 250, 0.18);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+  animation: seat-bob 2.4s ease-in-out infinite alternate;
+  animation-delay: var(--bob-delay, 0s);
+}
+
+.scene-person svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.scene-person.boss {
+  width: clamp(38px, 12vw, 50px);
+  height: clamp(38px, 12vw, 50px);
+  border-color: var(--cash);
+  box-shadow: 0 0 16px rgba(62, 224, 137, 0.4);
+}
+
+@keyframes seat-bob {
+  from {
+    margin-top: -1.5px;
+  }
+  to {
+    margin-top: 1.5px;
+  }
+}
+
+.scene-more {
+  position: absolute;
+  right: 3%;
+  bottom: 6%;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.72rem;
+  color: var(--text);
+  background: rgba(7, 9, 18, 0.75);
+  border: 1px solid var(--line-bright);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+.scene-coin {
+  position: absolute;
+  font-size: 0.85rem;
+  transform: translateY(0);
+  will-change: transform, opacity;
+}
+
+.scene-sign {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text);
+  background: rgba(7, 9, 18, 0.72);
+  border: 1px solid var(--line-bright);
+  border-radius: 999px;
+  padding: 4px 10px;
+}

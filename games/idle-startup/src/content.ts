@@ -638,10 +638,10 @@ export const MILESTONES: MilestoneDef[] = [
   },
   {
     id: "first-1k",
-    name: "First $10K earned",
+    name: "First $100K earned",
     emoji: "💵",
     lesson: "Revenue is the only funding you never have to give back.",
-    check: (s) => s.totalEarned >= 10_000,
+    check: (s) => s.totalEarned >= 100_000,
   },
   {
     id: "first-campaign",

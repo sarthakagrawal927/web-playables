@@ -15,6 +15,7 @@ import {
   traitById,
   type UpgradeDef,
 } from "./content";
+import { createOfficeScene } from "./office-scene";
 import {
   availableUpgrades,
   breakdown,
@@ -285,6 +286,9 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
   // founder column
   const founder = el("section", "founder");
 
+  const sceneCard = el("div", "card scene-card");
+  const scene = createOfficeScene(sceneCard);
+
   const cashCard = el("div", "card cash-card");
   const cashValue = el("div", "cash-value", "$0");
   const cashNet = el("div", "cash-net", "");
@@ -355,7 +359,7 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
   fundBtn.addEventListener("click", () => hooks.onRaise());
   fundCard.append(el("div", "eyebrow", "Funding"), fundStatus, fundBar, fundBtn);
 
-  founder.append(cashCard, questCard, actionsCard, fundCard);
+  founder.append(sceneCard, cashCard, questCard, actionsCard, fundCard);
 
   // ops column: org chart by department + upgrades
   const ops = el("section", "ops");
@@ -928,6 +932,7 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
 
     renderCount += 1;
     if (renderCount % 4 === 1) chart.push(gross);
+    scene.update(state);
 
     // org chart
     for (const dept of DEPTS) {
