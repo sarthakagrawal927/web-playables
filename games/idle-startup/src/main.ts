@@ -21,7 +21,9 @@ async function boot() {
     initial: initialState,
   });
 
-  const { state } = await saves.load();
+  // "?new" starts a clean company (the first save overwrites the old one)
+  const loaded = await saves.load();
+  const state = new URLSearchParams(location.search).has("new") ? initialState() : loaded.state;
 
   const persist = async () => {
     try {
