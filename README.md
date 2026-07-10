@@ -58,6 +58,8 @@ Local proof: `pnpm build && pnpm preview`, then open
 
 ## Asset licenses
 
+- Scene backdrops & cover art: generated with FLUX.1-schnell on Cloudflare
+  Workers AI (bundled JPEGs, no runtime fetches).
 - Icon artwork: [Fluent Emoji](https://github.com/microsoft/fluentui-emoji)
   © Microsoft, MIT license (3D set, vendored into `src/sprites/`, no runtime
   fetches). Fonts via Fontsource (OFL). Everything else is

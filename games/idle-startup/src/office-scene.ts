@@ -6,23 +6,21 @@
 import { renderAvatar } from "./avatar";
 import { OFFICES } from "./content";
 import { pic } from "./img";
+import office0 from "./scenes/office-0.jpg";
+import office1 from "./scenes/office-1.jpg";
+import office2 from "./scenes/office-2.jpg";
+import office3 from "./scenes/office-3.jpg";
+import office4 from "./scenes/office-4.jpg";
+import office5 from "./scenes/office-5.jpg";
 import { currentOffice, grossPerSec } from "./sim";
 import type { GameState } from "./state";
+
+const BACKDROPS = [office0, office1, office2, office3, office4, office5];
 
 export interface OfficeScene {
   /** Cheap per-render update; rebuilds only when team/office change. */
   update(state: GameState): void;
 }
-
-/** Wall hue + props per office tier, in OFFICES order. */
-const TIER_LOOKS = [
-  { hue: 30, windows: 1, props: ["🧰", "📦"] }, // garage
-  { hue: 200, windows: 3, props: ["🪴", "☕"] }, // coworking
-  { hue: 260, windows: 4, props: ["🪴", "🛋️", "☕"] }, // loft
-  { hue: 210, windows: 6, props: ["🪴", "🖨️", "☕", "🐟"] }, // office
-  { hue: 150, windows: 8, props: ["🌳", "🎱", "☕", "🤖"] }, // campus
-  { hue: 280, windows: 12, props: ["🗽", "🚁", "☕", "🏆"] }, // tower
-];
 
 /** Desk slots as [left%, top%] — founder gets the first. */
 const SLOTS: Array<[number, number]> = [
@@ -40,95 +38,19 @@ const SLOTS: Array<[number, number]> = [
   [91, 80],
 ];
 
-function drawBackdrop(canvas: HTMLCanvasElement, tier: number): void {
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-  const w = 780;
-  const h = 400;
-  canvas.width = w;
-  canvas.height = h;
-  const look = TIER_LOOKS[Math.min(tier, TIER_LOOKS.length - 1)] ?? TIER_LOOKS[0];
-  if (!look) return;
-  const { hue } = look;
-
-  // wall
-  const wall = ctx.createLinearGradient(0, 0, 0, h);
-  wall.addColorStop(0, `hsl(${hue} 30% 16%)`);
-  wall.addColorStop(0.62, `hsl(${hue} 26% 11%)`);
-  ctx.fillStyle = wall;
-  ctx.fillRect(0, 0, w, h * 0.66);
-
-  // floor
-  const floor = ctx.createLinearGradient(0, h * 0.62, 0, h);
-  floor.addColorStop(0, `hsl(${hue} 18% 9%)`);
-  floor.addColorStop(1, `hsl(${hue} 16% 6%)`);
-  ctx.fillStyle = floor;
-  ctx.fillRect(0, h * 0.62, w, h * 0.38);
-
-  // floorboards
-  ctx.strokeStyle = `hsl(${hue} 22% 14%)`;
-  ctx.lineWidth = 2;
-  for (let i = 1; i < 5; i++) {
-    const y = h * 0.62 + i * ((h * 0.38) / 5);
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(w, y);
-    ctx.stroke();
-  }
-
-  // windows with a night skyline glow — more windows, bigger company
-  const count = look.windows;
-  const winW = Math.min(90, (w - 60) / count - 14);
-  const totalW = count * (winW + 14);
-  const startX = (w - totalW) / 2 + 7;
-  for (let i = 0; i < count; i++) {
-    const x = startX + i * (winW + 14);
-    const y = h * 0.1;
-    const winH = h * 0.34;
-    const sky = ctx.createLinearGradient(0, y, 0, y + winH);
-    sky.addColorStop(0, `hsl(${(hue + 60) % 360} 45% 26%)`);
-    sky.addColorStop(1, `hsl(${(hue + 30) % 360} 50% 14%)`);
-    ctx.fillStyle = sky;
-    ctx.beginPath();
-    ctx.roundRect(x, y, winW, winH, 8);
-    ctx.fill();
-    ctx.strokeStyle = `hsl(${hue} 25% 22%)`;
-    ctx.lineWidth = 3;
-    ctx.stroke();
-    // city lights
-    ctx.fillStyle = "rgba(255, 220, 130, 0.5)";
-    for (let d = 0; d < 6; d++) {
-      const lx = x + 8 + ((i * 7 + d * 13) % Math.max(8, winW - 16));
-      const ly = y + winH * 0.45 + ((d * 17 + i * 5) % (winH * 0.45));
-      ctx.fillRect(lx, ly, 3, 3);
-    }
-  }
-
-  // desks under the seating rows
-  ctx.fillStyle = `hsl(${hue} 20% 20%)`;
-  for (const [lx, ty] of SLOTS) {
-    const x = (lx / 100) * w;
-    const y = (ty / 100) * h + 26;
-    ctx.beginPath();
-    ctx.roundRect(x - 26, y, 52, 9, 4);
-    ctx.fill();
-  }
-}
-
 export function createOfficeScene(host: HTMLElement): OfficeScene {
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const backdrop = document.createElement("canvas");
+  const backdrop = document.createElement("img");
   backdrop.className = "scene-backdrop";
+  backdrop.alt = "";
   backdrop.setAttribute("aria-hidden", "true");
-  const propsLayer = document.createElement("div");
-  propsLayer.className = "scene-props";
   const crew = document.createElement("div");
   crew.className = "scene-crew";
   const coins = document.createElement("div");
   coins.className = "scene-coins";
   const sign = document.createElement("div");
   sign.className = "scene-sign";
-  host.append(backdrop, propsLayer, crew, coins, sign);
+  host.append(backdrop, crew, coins, sign);
 
   const COIN_POOL: HTMLSpanElement[] = [];
   let lastTeamLen = -1;
@@ -197,20 +119,10 @@ export function createOfficeScene(host: HTMLElement): OfficeScene {
       const officeIdx = Math.min(state.officeIndex, OFFICES.length - 1);
       if (officeIdx !== lastOffice) {
         lastOffice = officeIdx;
-        drawBackdrop(backdrop, officeIdx);
+        backdrop.src = BACKDROPS[officeIdx] ?? BACKDROPS[0] ?? "";
         const office = currentOffice(state);
         sign.textContent = "";
         sign.append(pic(office.emoji, "sign-img"), document.createTextNode(office.name));
-        propsLayer.textContent = "";
-        const look = TIER_LOOKS[officeIdx] ?? TIER_LOOKS[0];
-        (look?.props ?? []).forEach((glyph, i) => {
-          const prop = document.createElement("span");
-          prop.className = "scene-prop";
-          prop.append(pic(glyph, "prop-img"));
-          prop.style.left = `${6 + i * 27}%`;
-          prop.style.top = "38%";
-          propsLayer.append(prop);
-        });
       }
       if (state.team.length !== lastTeamLen || state.founder !== lastFounder) {
         lastTeamLen = state.team.length;

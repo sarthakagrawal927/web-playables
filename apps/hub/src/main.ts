@@ -2,7 +2,11 @@ import "@fontsource-variable/space-grotesk";
 import "@fontsource-variable/jetbrains-mono";
 import "./style.css";
 
+import coverIdleStartup from "./assets/cover-idle-startup.jpg";
 import { drawCover } from "./cover";
+
+const COVER_ART: Record<string, string> = { "idle-startup": coverIdleStartup };
+
 import { GAMES, type GameMeta } from "./games";
 
 const COVER_HUES: Record<string, number> = {
@@ -28,15 +32,24 @@ function createCard(game: GameMeta) {
 
   const art = document.createElement("div");
   art.className = "game-card__art";
-  const cover = document.createElement("canvas");
-  cover.className = "game-card__cover";
-  cover.setAttribute("aria-hidden", "true");
-  drawCover(cover, {
-    hue: COVER_HUES[game.id] ?? 210,
-    muted: game.status === "soon",
-    seed: game.id.length * 31,
-  });
-  art.append(cover);
+  const artUrl = COVER_ART[game.id];
+  if (artUrl) {
+    const cover = document.createElement("img");
+    cover.className = "game-card__cover";
+    cover.src = artUrl;
+    cover.alt = "";
+    art.append(cover);
+  } else {
+    const cover = document.createElement("canvas");
+    cover.className = "game-card__cover";
+    cover.setAttribute("aria-hidden", "true");
+    drawCover(cover, {
+      hue: COVER_HUES[game.id] ?? 210,
+      muted: game.status === "soon",
+      seed: game.id.length * 31,
+    });
+    art.append(cover);
+  }
   addText(art, "game-card__emoji", game.emoji);
   card.append(art);
 
