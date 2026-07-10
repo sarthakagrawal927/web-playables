@@ -1633,14 +1633,14 @@ body.paused *::after {
 /* ================= illustrated sprites & new motion ================= */
 
 .gen-medal .medal-img {
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
 }
 
 img.tile-icon {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   margin-bottom: 2px;
 }
 
@@ -1690,8 +1690,8 @@ img.quest-emoji {
 }
 
 .luck-img {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
 }
 
 .floaty-img {

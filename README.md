@@ -58,9 +58,9 @@ Local proof: `pnpm build && pnpm preview`, then open
 
 ## Asset licenses
 
-- Emoji artwork: [Twemoji](https://github.com/jdecked/twemoji) © Twitter, Inc
-  and contributors, licensed CC-BY 4.0 (bundled via `@twemoji/svg`, no
-  runtime fetches). Fonts via Fontsource (OFL). Everything else is
+- Icon artwork: [Fluent Emoji](https://github.com/microsoft/fluentui-emoji)
+  © Microsoft, MIT license (3D set, vendored into `src/sprites/`, no runtime
+  fetches). Fonts via Fontsource (OFL). Everything else is
   original/procedural.
 
 ## YouTube Playables constraints baked into this repo

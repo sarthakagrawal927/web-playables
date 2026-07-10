@@ -1,71 +1,72 @@
-// Bundled illustrated emoji (Twemoji, CC BY 4.0 — attribution in README).
-// Every sprite ships in the build: crisp everywhere, zero external requests,
-// which is what YouTube Playables certification requires.
+// Bundled 3D illustrated icons (Microsoft Fluent Emoji, MIT — see README).
+// Every sprite ships in the build: glossy hyper-casual art, zero external
+// requests, which is what YouTube Playables certification requires.
 
-import artistPalette from "@twemoji/svg/1f3a8.svg";
-import target from "@twemoji/svg/1f3af.svg";
-import pool8 from "@twemoji/svg/1f3b1.svg";
-import die from "@twemoji/svg/1f3b2.svg";
-import trophy from "@twemoji/svg/1f3c6.svg";
-import crane from "@twemoji/svg/1f3d7.svg";
-import classical from "@twemoji/svg/1f3db.svg";
-import office from "@twemoji/svg/1f3e2.svg";
-import factory from "@twemoji/svg/1f3ed.svg";
-import lightbulb from "@twemoji/svg/1f4a1.svg";
-import collision from "@twemoji/svg/1f4a5.svg";
-import dollar from "@twemoji/svg/1f4b5.svg";
-import moneyWings from "@twemoji/svg/1f4b8.svg";
-import chartUp from "@twemoji/svg/1f4c8.svg";
-import clipboard from "@twemoji/svg/1f4cb.svg";
-import ruler from "@twemoji/svg/1f4d0.svg";
-import phone from "@twemoji/svg/1f4de.svg";
-import megaphone from "@twemoji/svg/1f4e3.svg";
-import box from "@twemoji/svg/1f4e6.svg";
-import printer from "@twemoji/svg/1f5a8.svg";
-import cardBox from "@twemoji/svg/1f5c2.svg";
-import liberty from "@twemoji/svg/1f5fd.svg";
-import couch from "@twemoji/svg/1f6cb.svg";
-import tools from "@twemoji/svg/1f6e0.svg";
-import technologist from "@twemoji/svg/1f9d1-200d-1f4bb.svg";
-import briefcase from "@twemoji/svg/1f9d1-200d-1f4bc.svg";
-import zen from "@twemoji/svg/1f9d8.svg";
-import mage from "@twemoji/svg/1f9d9.svg";
-import abacus from "@twemoji/svg/1f9ee.svg";
-import toolbox from "@twemoji/svg/1f9f0.svg";
-import fish from "@twemoji/svg/1f41f.svg";
-import gem from "@twemoji/svg/1f48e.svg";
-import microscope from "@twemoji/svg/1f52c.svg";
-import handshake from "@twemoji/svg/1f91d.svg";
-import cityDusk from "@twemoji/svg/1f306.svg";
-import tree from "@twemoji/svg/1f333.svg";
-import balloon from "@twemoji/svg/1f388.svg";
-import turtle from "@twemoji/svg/1f422.svg";
-import womanTech from "@twemoji/svg/1f469-200d-1f4bb.svg";
-import fire from "@twemoji/svg/1f525.svg";
-import rocket from "@twemoji/svg/1f680.svg";
-import helicopter from "@twemoji/svg/1f681.svg";
-import car from "@twemoji/svg/1f697.svg";
-import robot from "@twemoji/svg/1f916.svg";
-import chair from "@twemoji/svg/1fa91.svg";
-import coin from "@twemoji/svg/1fa99.svg";
-import plant from "@twemoji/svg/1fab4.svg";
-import star from "@twemoji/svg/2b50.svg";
-import hourglass from "@twemoji/svg/23f3.svg";
-import zap from "@twemoji/svg/26a1.svg";
-import cloud from "@twemoji/svg/2601.svg";
-import coffee from "@twemoji/svg/2615.svg";
-import scales from "@twemoji/svg/2696.svg";
+import abacus from "./sprites/abacus.png";
+import balloon from "./sprites/balloon.png";
+import box from "./sprites/box.png";
+import car from "./sprites/car.png";
+import card_box from "./sprites/card_box.png";
+import chair from "./sprites/chair.png";
+import chart_up from "./sprites/chart_up.png";
+import city_dusk from "./sprites/city_dusk.png";
+import classical from "./sprites/classical.png";
+import clipboard from "./sprites/clipboard.png";
+import cloud from "./sprites/cloud.png";
+import coffee from "./sprites/coffee.png";
+import coin from "./sprites/coin.png";
+import collision from "./sprites/collision.png";
+import couch from "./sprites/couch.png";
+import crane from "./sprites/crane.png";
+import die from "./sprites/die.png";
+import dollar from "./sprites/dollar.png";
+import factory from "./sprites/factory.png";
+import fire from "./sprites/fire.png";
+import fish from "./sprites/fish.png";
+import gem from "./sprites/gem.png";
+import handshake from "./sprites/handshake.png";
+import helicopter from "./sprites/helicopter.png";
+import hourglass from "./sprites/hourglass.png";
+import liberty from "./sprites/liberty.png";
+import lightbulb from "./sprites/lightbulb.png";
+import mage from "./sprites/mage.png";
+import megaphone from "./sprites/megaphone.png";
+import microscope from "./sprites/microscope.png";
+import money_wings from "./sprites/money_wings.png";
+import office from "./sprites/office.png";
+import office_worker from "./sprites/office_worker.png";
+import palette from "./sprites/palette.png";
+import party from "./sprites/party.png";
+import phone from "./sprites/phone.png";
+import plant from "./sprites/plant.png";
+import pool8 from "./sprites/pool8.png";
+import printer from "./sprites/printer.png";
+import robot from "./sprites/robot.png";
+import rocket from "./sprites/rocket.png";
+import ruler from "./sprites/ruler.png";
+import scales from "./sprites/scales.png";
+import star from "./sprites/star.png";
+import target from "./sprites/target.png";
+import technologist from "./sprites/technologist.png";
+import toolbox from "./sprites/toolbox.png";
+import tools from "./sprites/tools.png";
+import tree from "./sprites/tree.png";
+import trophy from "./sprites/trophy.png";
+import turtle from "./sprites/turtle.png";
+import woman_tech from "./sprites/woman_tech.png";
+import zap from "./sprites/zap.png";
+import zen from "./sprites/zen.png";
 
 /** emoji character → bundled sprite URL */
 export const SPRITES: Record<string, string> = {
   "🎈": balloon,
-  "📈": chartUp,
+  "📈": chart_up,
   "🎲": die,
   "🎯": target,
   "💥": collision,
   "💡": lightbulb,
   "💵": dollar,
-  "💸": moneyWings,
+  "💸": money_wings,
   "📋": clipboard,
   "📣": megaphone,
   "📦": box,
@@ -73,20 +74,20 @@ export const SPRITES: Record<string, string> = {
   "🔥": fire,
   "🔬": microscope,
   "🖨️": printer,
-  "🗂️": cardBox,
+  "🗂️": card_box,
   "🗽": liberty,
-  "🌆": cityDusk,
+  "🌆": city_dusk,
   "🌳": tree,
   "🐟": fish,
   "🐢": turtle,
-  "👩‍💻": womanTech,
+  "👩‍💻": woman_tech,
   "💎": gem,
   "🚀": rocket,
   "🚁": helicopter,
   "🚗": car,
   "🛋️": couch,
   "🛠️": tools,
-  "🎨": artistPalette,
+  "🎨": palette,
   "🎱": pool8,
   "🏆": trophy,
   "🏗️": crane,
@@ -97,7 +98,7 @@ export const SPRITES: Record<string, string> = {
   "🤝": handshake,
   "🧙": mage,
   "🧑‍💻": technologist,
-  "🧑‍💼": briefcase,
+  "🧑‍💼": office_worker,
   "🧘": zen,
   "🧮": abacus,
   "🧰": toolbox,
@@ -111,6 +112,7 @@ export const SPRITES: Record<string, string> = {
   "☕": coffee,
   "☁️": cloud,
   "⭐": star,
+  "🎉": party,
 };
 
 /**
