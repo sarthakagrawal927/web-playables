@@ -75,6 +75,8 @@ export interface GameState {
   roleMods: Record<string, { rate: number; pay: number }>;
   /** last quarter (index) the board asked for a decision */
   lastDecisionQuarter: number;
+  /** index into OFFICES; crash sends you back to the garage */
+  officeIndex: number;
 }
 
 export function initialBoosts(): BoostState {
@@ -89,8 +91,8 @@ export function initialBoosts(): BoostState {
   };
 }
 
-/** Friends-and-family money: enough to feel real, not enough to skip clicking. */
-export const STARTING_CASH = 1_000;
+/** Friends-and-family round: enough to hire a first team, not to coast. */
+export const STARTING_CASH = 25_000;
 
 export function initialState(): GameState {
   return {
@@ -116,6 +118,7 @@ export function initialState(): GameState {
     equity: 1,
     roleMods: {},
     lastDecisionQuarter: 0,
+    officeIndex: 0,
   };
 }
 
@@ -140,6 +143,7 @@ export const migrations: Record<number, Migration> = {
     equity: 1,
     roleMods: {},
     lastDecisionQuarter: 0,
+    officeIndex: 0,
   }),
   // v2 → v3: names — founder, company, and each hire's chosen name.
   2: (state) => {
@@ -153,6 +157,7 @@ export const migrations: Record<number, Migration> = {
       equity: 1,
       roleMods: {},
       lastDecisionQuarter: 0,
+      officeIndex: 0,
     };
   },
 };

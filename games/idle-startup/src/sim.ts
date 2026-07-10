@@ -24,6 +24,8 @@ import {
   MANAGER_SHIPS_PER_SEC,
   MILESTONES,
   type MilestoneDef,
+  OFFICES,
+  type OfficeDef,
   PEOPLE_DISCOUNT,
   PEOPLE_DISCOUNT_CAP,
   PRESTIGE_UNIT,
@@ -115,8 +117,31 @@ export function generatorUnitRate(state: GameState, def: GeneratorDef): number {
     prestigeMult(state) *
     researchMult(state) *
     state.boosts.adMult *
-    state.boosts.decisionRev
+    state.boosts.decisionRev *
+    moraleMult(state)
   );
+}
+
+/** Where the company works right now. */
+export function currentOffice(state: GameState): OfficeDef {
+  return OFFICES[Math.min(state.officeIndex, OFFICES.length - 1)] ?? (OFFICES[0] as OfficeDef);
+}
+
+export function nextOffice(state: GameState): OfficeDef | null {
+  return OFFICES[state.officeIndex + 1] ?? null;
+}
+
+/** Morale from the office multiplies all revenue. */
+export function moraleMult(state: GameState): number {
+  return currentOffice(state).morale;
+}
+
+export function upgradeOffice(state: GameState): OfficeDef | null {
+  const next = nextOffice(state);
+  if (!next || state.cash < next.cost) return null;
+  state.cash -= next.cost;
+  state.officeIndex += 1;
+  return next;
 }
 
 /** Licensing revenue from shipped research — an IP-first company is viable. */
@@ -126,7 +151,9 @@ export function royaltiesPerSec(state: GameState): number {
     const def = researchById(id);
     if (def) total += def.royalty;
   }
-  return total * prestigeMult(state) * state.boosts.adMult * state.boosts.decisionRev;
+  return (
+    total * prestigeMult(state) * state.boosts.adMult * state.boosts.decisionRev * moraleMult(state)
+  );
 }
 
 /** Eng managers auto-ship: automated founder clicks, per second. */
@@ -173,7 +200,10 @@ export function burnPerSec(state: GameState): number {
     const count = owned(state, def.id);
     if (count > 0) total += (count + (state.roleMods[def.id]?.pay ?? 0)) * def.salary;
   }
-  return total * burnMult(state) * financeBurnMult(state) * state.boosts.decisionBurn;
+  return (
+    total * burnMult(state) * financeBurnMult(state) * state.boosts.decisionBurn +
+    currentOffice(state).rent
+  );
 }
 
 export function netPerSec(state: GameState): number {
@@ -196,6 +226,7 @@ export function shipValue(state: GameState): number {
     gtmClickMult(state) *
     prestigeMult(state) *
     researchMult(state) *
+    moraleMult(state) *
     frenzy
   );
 }
@@ -422,6 +453,13 @@ export function breakdown(state: GameState): Breakdown {
       value: `−${Math.round((1 - hd) * 100)}%`,
     });
 
+  const office = currentOffice(state);
+  if (office.morale > 1)
+    multipliers.push({
+      label: `${office.emoji} ${office.name} (morale)`,
+      value: `×${office.morale}`,
+    });
+
   const payroll: BreakdownLine[] = [];
   let base = 0;
   for (const def of GENERATORS) base += owned(state, def.id) * def.salary;
@@ -431,6 +469,8 @@ export function breakdown(state: GameState): Breakdown {
     payroll.push({ label: `Round expectations (${state.rounds})`, value: `×${bm.toFixed(2)}` });
   const fm = financeBurnMult(state);
   if (fm < 1) payroll.push({ label: "Finance team", value: `−${Math.round((1 - fm) * 100)}%` });
+  if (office.rent > 0)
+    payroll.push({ label: `${office.emoji} Rent`, value: `$${formatNumber(office.rent)}/day` });
   const rj = roundJump(state);
   if (rj < 1.25)
     payroll.push({
@@ -576,6 +616,7 @@ export function doCrash(state: GameState): void {
   state.boosts.decisionBurn = 1;
   state.boosts.decisionRemaining = 0;
   state.lastDecisionQuarter = 0;
+  state.officeIndex = 0;
 }
 
 /** Remember a hire's face, name, role, and skills (display-capped). */

@@ -105,6 +105,17 @@ async function boot() {
       ui.render(state);
       void persist();
     },
+    onOffice() {
+      const moved = sim.upgradeOffice(state);
+      if (moved) {
+        ui.celebrate(
+          `${moved.emoji} ${moved.name}!`,
+          `Morale ×${moved.morale} — rent is now real: $${formatNumber(moved.rent)}/day`,
+        );
+        ui.render(state);
+        void persist();
+      }
+    },
     onRestart() {
       crashed = false;
       ui.render(state);

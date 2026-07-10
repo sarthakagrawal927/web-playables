@@ -42,7 +42,7 @@ export interface UpgradeDef {
 }
 
 /** Value of one shipped feature (managers do the shipping). */
-export const SHIP_VALUE = 10;
+export const SHIP_VALUE = 2_000;
 
 /** totalEarned (this run) needed per investor point: gain = floor(sqrt(earned/PRESTIGE_UNIT)). */
 export const PRESTIGE_UNIT = 10_000_000;
@@ -152,10 +152,10 @@ export const GENERATORS: GeneratorDef[] = [
     name: "Intern",
     flavor: "Ships bugs. Occasionally features.",
     emoji: "🧑‍💻",
-    baseCost: 150,
+    baseCost: 500,
     costGrowth: 1.15,
-    baseRate: 5,
-    salary: 2,
+    baseRate: 260,
+    salary: 130,
   },
   {
     id: "junior-dev",
@@ -163,10 +163,10 @@ export const GENERATORS: GeneratorDef[] = [
     name: "Junior dev",
     flavor: "Knows one framework. Deeply.",
     emoji: "👩‍💻",
-    baseCost: 1_000,
+    baseCost: 3_000,
     costGrowth: 1.15,
-    baseRate: 20,
-    salary: 8,
+    baseRate: 520,
+    salary: 280,
   },
   {
     id: "senior-dev",
@@ -174,10 +174,10 @@ export const GENERATORS: GeneratorDef[] = [
     name: "Senior dev",
     flavor: "Deletes more code than they write.",
     emoji: "🧙",
-    baseCost: 11_000,
+    baseCost: 12_000,
     costGrowth: 1.15,
-    baseRate: 120,
-    salary: 50,
+    baseRate: 1_100,
+    salary: 600,
   },
   {
     id: "staff-engineer",
@@ -185,10 +185,10 @@ export const GENERATORS: GeneratorDef[] = [
     name: "Staff engineer",
     flavor: "Writes the doc that ends the argument.",
     emoji: "🏗️",
-    baseCost: 140_000,
+    baseCost: 60_000,
     costGrowth: 1.15,
-    baseRate: 700,
-    salary: 300,
+    baseRate: 2_600,
+    salary: 1_400,
   },
   {
     id: "eng-manager",
@@ -196,10 +196,10 @@ export const GENERATORS: GeneratorDef[] = [
     name: "Manager",
     flavor: "Ships for you. Runs the standup.",
     emoji: "🧑‍💼",
-    baseCost: 30_000,
+    baseCost: 25_000,
     costGrowth: 1.2,
     baseRate: 0,
-    salary: 100,
+    salary: 700,
   },
   {
     id: "ai-copilot",
@@ -207,10 +207,10 @@ export const GENERATORS: GeneratorDef[] = [
     name: "AI copilot",
     flavor: "Autocompletes the whole sprint.",
     emoji: "🤖",
-    baseCost: 14_000_000,
+    baseCost: 400_000,
     costGrowth: 1.15,
-    baseRate: 17_000,
-    salary: 7_000,
+    baseRate: 9_000,
+    salary: 4_000,
   },
   {
     id: "acquisition",
@@ -218,10 +218,10 @@ export const GENERATORS: GeneratorDef[] = [
     name: "Competitor acquisition",
     flavor: "Their engineers ship for you now.",
     emoji: "🏢",
-    baseCost: 3_300_000_000,
+    baseCost: 50_000_000,
     costGrowth: 1.15,
-    baseRate: 620_000,
-    salary: 260_000,
+    baseRate: 300_000,
+    salary: 160_000,
   },
 
   // Product — multiplies engineering
@@ -231,10 +231,10 @@ export const GENERATORS: GeneratorDef[] = [
     name: "Product manager",
     flavor: "Turns chaos into roadmap.",
     emoji: "📋",
-    baseCost: 40_000,
+    baseCost: 30_000,
     costGrowth: 1.22,
     baseRate: 0,
-    salary: 80,
+    salary: 650,
   },
   {
     id: "designer",
@@ -242,10 +242,10 @@ export const GENERATORS: GeneratorDef[] = [
     name: "Designer",
     flavor: "Moves it 2px left. Revenue up.",
     emoji: "🎨",
-    baseCost: 900_000,
+    baseCost: 90_000,
     costGrowth: 1.22,
     baseRate: 0,
-    salary: 300,
+    salary: 550,
   },
 
   // Go-to-market — multiplies the ship click, closes some deals too
@@ -255,10 +255,10 @@ export const GENERATORS: GeneratorDef[] = [
     name: "Sales rep",
     flavor: "Sells the feature you haven't shipped.",
     emoji: "📞",
-    baseCost: 3_000,
+    baseCost: 8_000,
     costGrowth: 1.17,
-    baseRate: 60,
-    salary: 25,
+    baseRate: 700,
+    salary: 350,
   },
   {
     id: "growth-hacker",
@@ -266,10 +266,10 @@ export const GENERATORS: GeneratorDef[] = [
     name: "Growth hacker",
     flavor: "A/B tests the pricing page hourly.",
     emoji: "📈",
-    baseCost: 2_000_000,
+    baseCost: 150_000,
     costGrowth: 1.17,
-    baseRate: 2_600,
-    salary: 1_100,
+    baseRate: 4_200,
+    salary: 2_200,
   },
   {
     id: "cmo",
@@ -277,10 +277,10 @@ export const GENERATORS: GeneratorDef[] = [
     name: "CMO",
     flavor: "Makes the launch trend before lunch.",
     emoji: "📣",
-    baseCost: 80_000_000,
+    baseCost: 3_000_000,
     costGrowth: 1.17,
-    baseRate: 40_000,
-    salary: 17_000,
+    baseRate: 30_000,
+    salary: 15_000,
     max: 1,
   },
 
@@ -291,10 +291,10 @@ export const GENERATORS: GeneratorDef[] = [
     name: "Recruiter",
     flavor: "Knows everyone. Closes anyone.",
     emoji: "🤝",
-    baseCost: 150_000,
+    baseCost: 40_000,
     costGrowth: 1.3,
     baseRate: 0,
-    salary: 200,
+    salary: 400,
   },
   {
     id: "chief-of-staff",
@@ -302,10 +302,10 @@ export const GENERATORS: GeneratorDef[] = [
     name: "Chief of staff",
     flavor: "The org chart finally makes sense.",
     emoji: "🗂️",
-    baseCost: 30_000_000,
+    baseCost: 800_000,
     costGrowth: 1.3,
     baseRate: 0,
-    salary: 7_000,
+    salary: 1_500,
     max: 1,
   },
 
@@ -316,10 +316,10 @@ export const GENERATORS: GeneratorDef[] = [
     name: "Startup lawyer",
     flavor: "Reads the fine print you signed anyway.",
     emoji: "⚖️",
-    baseCost: 400_000,
+    baseCost: 200_000,
     costGrowth: 1.3,
     baseRate: 0,
-    salary: 700,
+    salary: 1_000,
   },
 
   // Finance — keeps the burn honest
@@ -329,7 +329,7 @@ export const GENERATORS: GeneratorDef[] = [
     name: "CFO",
     flavor: "Finds money you didn't know you had.",
     emoji: "🧮",
-    baseCost: 2_000_000,
+    baseCost: 1_500_000,
     costGrowth: 1.35,
     baseRate: 0,
     salary: 2_500,
@@ -343,7 +343,7 @@ export const UPGRADES: UpgradeDef[] = [
     emoji: "☕",
     name: "Coffee machine",
     flavor: "Interns work at 2× pour-over speed.",
-    cost: 4_000,
+    cost: 3_000,
     target: "intern",
     mult: 2,
     unlock: { generator: "intern", count: 5 },
@@ -353,17 +353,17 @@ export const UPGRADES: UpgradeDef[] = [
     emoji: "⌨️",
     name: "Mechanical keyboards",
     flavor: "Louder typing, bigger features. 2× per ship.",
-    cost: 6_000,
+    cost: 5_000,
     target: "click",
     mult: 2,
-    unlock: { totalEarned: 2_000 },
+    unlock: { totalEarned: 10_000 },
   },
   {
     id: "pair-programming",
     emoji: "🧑‍🤝‍🧑",
     name: "Pair programming",
     flavor: "Junior devs produce 2× (and argue 3×).",
-    cost: 25_000,
+    cost: 20_000,
     target: "junior-dev",
     mult: 2,
     unlock: { generator: "junior-dev", count: 5 },
@@ -373,17 +373,17 @@ export const UPGRADES: UpgradeDef[] = [
     emoji: "✅",
     name: "CI pipeline",
     flavor: "Green checks for everyone: +50% all revenue.",
-    cost: 100_000,
+    cost: 80_000,
     target: "all",
     mult: 1.5,
-    unlock: { totalEarned: 50_000 },
+    unlock: { totalEarned: 200_000 },
   },
   {
     id: "rubber-ducks",
     emoji: "🦆",
     name: "Rubber duck fleet",
     flavor: "Senior devs debug 2× faster by explaining to ducks.",
-    cost: 300_000,
+    cost: 250_000,
     target: "senior-dev",
     mult: 2,
     unlock: { generator: "senior-dev", count: 5 },
@@ -393,17 +393,17 @@ export const UPGRADES: UpgradeDef[] = [
     emoji: "🌙",
     name: "Dark mode",
     flavor: "The most requested feature. 3× per ship.",
-    cost: 500_000,
+    cost: 400_000,
     target: "click",
     mult: 3,
-    unlock: { totalEarned: 250_000 },
+    unlock: { totalEarned: 1_000_000 },
   },
   {
     id: "crm-nobody-updates",
     emoji: "📇",
     name: "A CRM nobody updates",
     flavor: "Sales still closes 2× with it open in a tab.",
-    cost: 600_000,
+    cost: 500_000,
     target: "sales-rep",
     mult: 2,
     unlock: { generator: "sales-rep", count: 5 },
@@ -413,7 +413,7 @@ export const UPGRADES: UpgradeDef[] = [
     emoji: "🎯",
     name: "OKR alignment",
     flavor: "Everyone rows the same direction: +50% all revenue.",
-    cost: 4_000_000,
+    cost: 3_000_000,
     target: "all",
     mult: 1.5,
     unlock: { generator: "product-manager", count: 3 },
@@ -423,7 +423,7 @@ export const UPGRADES: UpgradeDef[] = [
     emoji: "📐",
     name: "Design system",
     flavor: "Staff engineers stop rebuilding buttons. 2× output.",
-    cost: 9_000_000,
+    cost: 7_000_000,
     target: "staff-engineer",
     mult: 2,
     unlock: { generator: "staff-engineer", count: 5 },
@@ -433,7 +433,7 @@ export const UPGRADES: UpgradeDef[] = [
     emoji: "🎬",
     name: "Viral launch video",
     flavor: "Growth hits the algorithm. 2× their revenue.",
-    cost: 30_000_000,
+    cost: 25_000_000,
     target: "growth-hacker",
     mult: 2,
     unlock: { generator: "growth-hacker", count: 5 },
@@ -443,17 +443,17 @@ export const UPGRADES: UpgradeDef[] = [
     emoji: "🧩",
     name: "Microservices rewrite",
     flavor: "Nobody knows how it works now. +50% all revenue.",
-    cost: 80_000_000,
+    cost: 60_000_000,
     target: "all",
     mult: 1.5,
-    unlock: { totalEarned: 20_000_000 },
+    unlock: { totalEarned: 30_000_000 },
   },
   {
     id: "fine-tuning",
     emoji: "🧠",
     name: "Fine-tuned models",
     flavor: "The copilot learned your codebase. 2× output.",
-    cost: 300_000_000,
+    cost: 250_000_000,
     target: "ai-copilot",
     mult: 2,
     unlock: { generator: "ai-copilot", count: 5 },
@@ -463,7 +463,7 @@ export const UPGRADES: UpgradeDef[] = [
     emoji: "🤝",
     name: "Post-merger synergy",
     flavor: "The acquisitions finally integrate. 2× their revenue.",
-    cost: 60_000_000_000,
+    cost: 5_000_000_000,
     target: "acquisition",
     mult: 2,
     unlock: { generator: "acquisition", count: 5 },
@@ -496,46 +496,46 @@ export const RESEARCH: ResearchDef[] = [
     id: "mvp",
     name: "MVP polish",
     flavor: "Fewer crashes than the demo. ×1.25 revenue + royalties.",
-    cost: 20_000,
+    cost: 15_000,
     seconds: 60,
     mult: 1.25,
-    royalty: 500,
+    royalty: 800,
   },
   {
     id: "v2",
     name: "Product v2",
     flavor: "The rewrite that actually ships. ×1.5 revenue.",
-    cost: 500_000,
+    cost: 120_000,
     seconds: 180,
     mult: 1.5,
-    royalty: 5_000,
+    royalty: 6_000,
   },
   {
     id: "mobile-app",
     name: "Mobile app",
     flavor: "Now in your pocket. ×1.75 revenue.",
-    cost: 10_000_000,
+    cost: 1_000_000,
     seconds: 300,
     mult: 1.75,
-    royalty: 50_000,
+    royalty: 40_000,
   },
   {
     id: "ai-features",
     name: "AI features",
     flavor: "The board demanded it. ×2 revenue.",
-    cost: 200_000_000,
+    cost: 20_000_000,
     seconds: 480,
     mult: 2,
-    royalty: 500_000,
+    royalty: 400_000,
   },
   {
     id: "moonshot",
     name: "Moonshot lab",
     flavor: "Nobody knows what they do in there. ×3 revenue.",
-    cost: 10_000_000_000,
+    cost: 1_000_000_000,
     seconds: 900,
     mult: 3,
-    royalty: 5_000_000,
+    royalty: 4_000_000,
   },
 ];
 
@@ -545,7 +545,7 @@ export function researchById(id: string): ResearchDef | undefined {
 
 // ---- Ad campaigns: pay, roll the dice, maybe go viral.
 export const CAMPAIGN_COST_SECONDS = 30; // costs ~30s of gross revenue
-export const CAMPAIGN_MIN_COST = 1_000;
+export const CAMPAIGN_MIN_COST = 5_000;
 export const CAMPAIGN_COOLDOWN_SECONDS = 30;
 
 export interface CampaignOutcome {
@@ -586,7 +586,7 @@ export function rollLuck(roll: number): LuckOutcome {
     return {
       type: "cash",
       revenueSeconds: 120,
-      minCash: 1_000,
+      minCash: 5_000,
       headline: "A VC slid into your DMs 💰",
     };
   }
@@ -596,7 +596,7 @@ export function rollLuck(roll: number): LuckOutcome {
   return {
     type: "cash",
     revenueSeconds: 45,
-    minCash: 500,
+    minCash: 2_000,
     headline: "Bug bounty paid out 🐛",
   };
 }
@@ -655,7 +655,7 @@ export const MILESTONES: MilestoneDef[] = [
     name: "Ramen profitable",
     emoji: "🍜",
     lesson: "Net positive means nobody can kill your company but you.",
-    check: (_s, c) => c.net > 0 && c.gross >= 500,
+    check: (_s, c) => c.net > 0 && c.gross >= 10_000,
   },
   {
     id: "first-research",
@@ -676,7 +676,7 @@ export const MILESTONES: MilestoneDef[] = [
     name: "Product-market fit",
     emoji: "🚀",
     lesson: "When revenue climbs without pushing, stop pushing and start scaling.",
-    check: (_s, c) => c.gross >= 5_000,
+    check: (_s, c) => c.gross >= 100_000,
   },
   {
     id: "real-office",
@@ -732,6 +732,7 @@ export const TOKENS_PER_COPILOT_PER_SEC = 250_000;
 export interface QuestView extends MilestoneView {
   clicks: number;
   research: { current: string | null; done: string[] };
+  officeIndex: number;
 }
 
 export interface QuestDef {
@@ -749,112 +750,119 @@ export const QUESTS: QuestDef[] = [
     id: "first-intern",
     goal: "Hire your first intern",
     emoji: "🧑‍💻",
-    reward: 200,
+    reward: 1_000,
     check: (s) => (s.generators.intern ?? 0) >= 1,
   },
   {
     id: "interns-3",
     goal: "Grow to 3 interns",
     emoji: "☕",
-    reward: 400,
+    reward: 2_500,
     check: (s) => (s.generators.intern ?? 0) >= 3,
   },
   {
     id: "junior-1",
     goal: "Hire a junior dev",
     emoji: "👩‍💻",
-    reward: 800,
+    reward: 5_000,
     check: (s) => (s.generators["junior-dev"] ?? 0) >= 1,
   },
   {
     id: "manager-1",
     goal: "Hire an eng manager — they ship for you",
     emoji: "🧑‍💼",
-    reward: 1_200,
+    reward: 8_000,
     check: (s) => (s.generators["eng-manager"] ?? 0) >= 1,
   },
   {
     id: "earn-5k",
-    goal: "Earn $5K in total",
+    goal: "Earn $50K in total",
     emoji: "💵",
-    reward: 1_500,
-    check: (s) => s.totalEarned >= 5_000,
+    reward: 12_000,
+    check: (s) => s.totalEarned >= 50_000,
   },
   {
     id: "campaign-1",
     goal: "Run your first ad campaign",
     emoji: "📣",
-    reward: 3_000,
+    reward: 20_000,
     check: (s) => s.campaignsRun >= 1,
   },
   {
     id: "sales-1",
     goal: "Hire someone in sales",
     emoji: "📞",
-    reward: 5_000,
+    reward: 30_000,
     check: (s) => (s.generators["sales-rep"] ?? 0) >= 1,
   },
   {
+    id: "office-1",
+    goal: "Move out of the garage",
+    emoji: "🪑",
+    reward: 40_000,
+    check: (s) => s.officeIndex >= 1,
+  },
+  {
     id: "rate-200",
-    goal: "Reach $200/s revenue",
+    goal: "Reach $5K/day revenue",
     emoji: "📈",
-    reward: 8_000,
-    check: (_s, c) => c.gross >= 200,
+    reward: 50_000,
+    check: (_s, c) => c.gross >= 5_000,
   },
   {
     id: "research-1",
     goal: "Start a research project",
     emoji: "🔬",
-    reward: 15_000,
+    reward: 100_000,
     check: (s) => s.research.current !== null || s.research.done.length > 0,
   },
   {
     id: "team-10",
     goal: "Grow the team to 10",
     emoji: "🏢",
-    reward: 30_000,
+    reward: 200_000,
     check: (s) => hires(s) >= 10,
   },
   {
     id: "pm-1",
     goal: "Hire a product manager",
     emoji: "📋",
-    reward: 60_000,
+    reward: 400_000,
     check: (s) => (s.generators["product-manager"] ?? 0) >= 1,
   },
   {
     id: "rate-2k",
-    goal: "Reach $2K/s revenue",
+    goal: "Reach $50K/day revenue",
     emoji: "💸",
-    reward: 150_000,
-    check: (_s, c) => c.gross >= 2_000,
+    reward: 1_000_000,
+    check: (_s, c) => c.gross >= 50_000,
   },
   {
     id: "earn-2m",
-    goal: "Earn $2M in total",
+    goal: "Earn $20M in total",
     emoji: "🤑",
-    reward: 400_000,
-    check: (s) => s.totalEarned >= 2_000_000,
+    reward: 2_500_000,
+    check: (s) => s.totalEarned >= 20_000_000,
   },
   {
     id: "raise-1",
     goal: "Raise your first round",
     emoji: "🎉",
-    reward: 1_000_000,
+    reward: 5_000_000,
     check: (s) => s.rounds >= 1,
   },
   {
     id: "rate-20k",
-    goal: "Reach $20K/s revenue",
+    goal: "Reach $500K/day revenue",
     emoji: "🌊",
-    reward: 3_000_000,
-    check: (_s, c) => c.gross >= 20_000,
+    reward: 12_000_000,
+    check: (_s, c) => c.gross >= 500_000,
   },
   {
     id: "team-25",
     goal: "Grow the team to 25",
     emoji: "🏟️",
-    reward: 10_000_000,
+    reward: 40_000_000,
     check: (s) => hires(s) >= 25,
   },
 ];
@@ -878,7 +886,7 @@ export const TRAITS: TraitDef[] = [
     emoji: "🧘",
     rateBonus: 0,
     payBonus: 0,
-    blurb: "Reliable. No surprises.",
+    blurb: "steady",
   },
   {
     id: "shipper",
@@ -894,7 +902,7 @@ export const TRAITS: TraitDef[] = [
     emoji: "💸",
     rateBonus: 0.4,
     payBonus: 0.5,
-    blurb: "+40% output · +50% pay",
+    blurb: "+40% out · +50% pay",
   },
   {
     id: "slow",
@@ -902,7 +910,7 @@ export const TRAITS: TraitDef[] = [
     emoji: "🐢",
     rateBonus: -0.2,
     payBonus: -0.2,
-    blurb: "−20% output · −20% pay",
+    blurb: "−20% out · −20% pay",
   },
 ];
 
@@ -1019,5 +1027,33 @@ export const DECISIONS: DecisionDef[] = [
         effect: {},
       },
     ],
+  },
+];
+
+// ---- the office: morale up, rent up. Crash and it's back to the garage.
+export interface OfficeDef {
+  id: string;
+  name: string;
+  emoji: string;
+  cost: number;
+  /** rent per day, added to burn (unaffected by salary multipliers) */
+  rent: number;
+  /** morale: multiplies ALL revenue */
+  morale: number;
+}
+
+export const OFFICES: OfficeDef[] = [
+  { id: "garage", name: "The garage", emoji: "🚗", cost: 0, rent: 0, morale: 1 },
+  { id: "coworking", name: "Coworking desks", emoji: "🪑", cost: 20_000, rent: 150, morale: 1.1 },
+  { id: "loft", name: "Converted loft", emoji: "🏭", cost: 250_000, rent: 1_200, morale: 1.25 },
+  { id: "office", name: "A real office", emoji: "🏢", cost: 3_000_000, rent: 8_000, morale: 1.45 },
+  { id: "campus", name: "HQ campus", emoji: "🏛️", cost: 60_000_000, rent: 120_000, morale: 1.75 },
+  {
+    id: "tower",
+    name: "Skyline tower",
+    emoji: "🌆",
+    cost: 1_500_000_000,
+    rent: 2_000_000,
+    morale: 2.2,
   },
 ];

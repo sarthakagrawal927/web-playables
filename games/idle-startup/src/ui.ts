@@ -22,6 +22,7 @@ import {
   campaignCost,
   canLaunchCampaign,
   companyAgeLabel,
+  currentOffice,
   currentQuest,
   earningsToNextInvestor,
   engMult,
@@ -35,6 +36,7 @@ import {
   hireCost,
   hireDiscount,
   INJECTION_PER_POINT,
+  nextOffice,
   nextResearch,
   owned,
   raiseGain,
@@ -53,6 +55,7 @@ export interface UIHooks {
   onRaise(): void;
   onCampaign(): void;
   onResearch(): void;
+  onOffice(): void;
   onLuckClaim(): void;
   onFire(teamIndex: number): void;
   onDecision(decision: DecisionDef, optionIndex: number): void;
@@ -333,7 +336,15 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
   const labBar = el("div", "lab-bar hidden");
   const labFill = el("div", "lab-fill");
   labBar.append(labFill);
-  actionsCard.append(adBtn, labBtn, labBar);
+  const officeBtn = el("button", "action-btn office-btn");
+  const officeLabel = el("span", "action-label", "🚗 The garage");
+  const officeMeta = el("span", "action-meta", "");
+  officeBtn.append(officeLabel, officeMeta);
+  officeBtn.addEventListener("click", () => {
+    if (!reducedMotion) boing(officeBtn);
+    hooks.onOffice();
+  });
+  actionsCard.append(adBtn, labBtn, labBar, officeBtn);
 
   const fundCard = el("div", "card fund-card");
   const fundStatus = el("div", "fund-status", "");
@@ -1020,6 +1031,18 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
       labMeta.textContent = "the lab has shipped everything";
       labBtn.disabled = true;
       labBar.classList.add("hidden");
+    }
+
+    // office
+    const office = currentOffice(state);
+    const nextHq = nextOffice(state);
+    officeLabel.textContent = `${office.emoji} ${office.name}`;
+    if (nextHq) {
+      officeMeta.textContent = `→ ${nextHq.emoji} ${money(nextHq.cost)} · ×${nextHq.morale} morale · rent ${money(nextHq.rent)}/day`;
+      officeBtn.disabled = state.cash < nextHq.cost;
+    } else {
+      officeMeta.textContent = "the skyline is yours";
+      officeBtn.disabled = true;
     }
 
     // funding

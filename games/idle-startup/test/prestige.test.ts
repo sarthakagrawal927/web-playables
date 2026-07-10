@@ -50,12 +50,12 @@ describe("funding rounds (raise until you crash)", () => {
     state.questIndex = 999; // keep quest rewards out of the payroll math
     const before = state.cash;
     tick(state, 1);
-    const drainAt0 = before + 50 - 20 - state.cash; // sanity: net +30
+    const drainAt0 = before + 2600 - 1300 - state.cash; // sanity: net positive
 
     state.rounds = 3;
     const cash2 = state.cash;
     tick(state, 1);
-    expect(state.cash - cash2).toBeCloseTo(50 - 20 * 1.25 ** 3);
+    expect(state.cash - cash2).toBeCloseTo(2600 - 1300 * 1.25 ** 3);
     expect(drainAt0).toBeCloseTo(0);
   });
 
