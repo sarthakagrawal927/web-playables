@@ -1,8 +1,9 @@
-export type DeptId = "eng" | "product" | "gtm" | "people" | "finance";
+export type DeptId = "eng" | "product" | "gtm" | "people" | "finance" | "legal";
 
 export interface DeptDef {
   id: DeptId;
   name: string;
+  icon: string;
   /** Medallion + header hue for this department. */
   hue: number;
   /** The department's power, in one line. */
@@ -23,6 +24,8 @@ export interface GeneratorDef {
   baseRate: number;
   /** Salary burn per second per unit; scales with funding rounds. */
   salary: number;
+  /** Hard cap on hires for this role (C-suite is a party of one). */
+  max?: number;
 }
 
 export type UpgradeTarget = "click" | "all" | (string & {});
@@ -30,6 +33,7 @@ export type UpgradeTarget = "click" | "all" | (string & {});
 export interface UpgradeDef {
   id: string;
   name: string;
+  emoji: string;
   flavor: string;
   cost: number;
   target: UpgradeTarget;
@@ -37,7 +41,8 @@ export interface UpgradeDef {
   unlock: { generator?: string; count?: number; totalEarned?: number };
 }
 
-export const CLICK_BASE = 10;
+/** Value of one shipped feature (managers do the shipping). */
+export const SHIP_VALUE = 10;
 
 /** totalEarned (this run) needed per investor point: gain = floor(sqrt(earned/PRESTIGE_UNIT)). */
 export const PRESTIGE_UNIT = 10_000_000;
@@ -52,15 +57,21 @@ export const GTM_CLICK_BONUS = 0.12;
 export const PEOPLE_DISCOUNT = 0.015;
 /** …down to at most −30%. */
 export const PEOPLE_DISCOUNT_CAP = 0.3;
-/** Each finance hire extends the offline-earnings window. */
-export const FINANCE_OFFLINE_BONUS_SECONDS = 45 * 60;
-export const OFFLINE_BASE_CAP_SECONDS = 8 * 3600;
-export const OFFLINE_MAX_CAP_SECONDS = 24 * 3600;
+/** Each lawyer softens the salary jump each round causes… */
+export const LEGAL_SOFTEN = 0.02;
+/** …but rounds always cost at least +5%. */
+export const LEGAL_SOFTEN_FLOOR = 1.05;
+
+/** Each finance hire trims payroll burn… */
+export const FINANCE_BURN_DISCOUNT = 0.15;
+/** …down to at most −40%. */
+export const FINANCE_BURN_DISCOUNT_CAP = 0.4;
 
 export const DEPTS: DeptDef[] = [
   {
     id: "eng",
     name: "Engineering",
+    icon: "🛠️",
     hue: 150,
     perk: "Builds product. Earns revenue.",
     short: "builds",
@@ -68,14 +79,23 @@ export const DEPTS: DeptDef[] = [
   {
     id: "product",
     name: "Product",
+    icon: "📐",
     hue: 258,
     perk: "+8% engineering revenue per hire",
     short: "+8% eng",
   },
-  { id: "gtm", name: "Go-to-market", hue: 38, perk: "+12% per ship per hire", short: "+12% ship" },
+  {
+    id: "gtm",
+    name: "Go-to-market",
+    icon: "📣",
+    hue: 38,
+    perk: "+12% per ship per hire",
+    short: "+12% ship",
+  },
   {
     id: "people",
     name: "People",
+    icon: "🤝",
     hue: 320,
     perk: "−1.5% hire costs per hire",
     short: "−1.5% hires",
@@ -83,9 +103,18 @@ export const DEPTS: DeptDef[] = [
   {
     id: "finance",
     name: "Finance",
+    icon: "🧮",
     hue: 205,
-    perk: "+45 min offline earnings per hire",
-    short: "+45m offline",
+    perk: "−15% payroll burn per finance hire",
+    short: "−15% burn",
+  },
+  {
+    id: "legal",
+    name: "Legal",
+    icon: "⚖️",
+    hue: 0,
+    perk: "softens round salary jumps −2% per hire",
+    short: "softer rounds",
   },
 ];
 
@@ -126,7 +155,7 @@ export const GENERATORS: GeneratorDef[] = [
     baseCost: 150,
     costGrowth: 1.15,
     baseRate: 5,
-    salary: 1,
+    salary: 2,
   },
   {
     id: "junior-dev",
@@ -137,7 +166,7 @@ export const GENERATORS: GeneratorDef[] = [
     baseCost: 1_000,
     costGrowth: 1.15,
     baseRate: 20,
-    salary: 5,
+    salary: 8,
   },
   {
     id: "senior-dev",
@@ -148,7 +177,7 @@ export const GENERATORS: GeneratorDef[] = [
     baseCost: 11_000,
     costGrowth: 1.15,
     baseRate: 120,
-    salary: 30,
+    salary: 50,
   },
   {
     id: "staff-engineer",
@@ -159,7 +188,18 @@ export const GENERATORS: GeneratorDef[] = [
     baseCost: 140_000,
     costGrowth: 1.15,
     baseRate: 700,
-    salary: 180,
+    salary: 300,
+  },
+  {
+    id: "eng-manager",
+    dept: "eng",
+    name: "Manager",
+    flavor: "Ships for you. Runs the standup.",
+    emoji: "🧑‍💼",
+    baseCost: 30_000,
+    costGrowth: 1.2,
+    baseRate: 0,
+    salary: 100,
   },
   {
     id: "ai-copilot",
@@ -170,7 +210,7 @@ export const GENERATORS: GeneratorDef[] = [
     baseCost: 14_000_000,
     costGrowth: 1.15,
     baseRate: 17_000,
-    salary: 4_000,
+    salary: 7_000,
   },
   {
     id: "acquisition",
@@ -181,7 +221,7 @@ export const GENERATORS: GeneratorDef[] = [
     baseCost: 3_300_000_000,
     costGrowth: 1.15,
     baseRate: 620_000,
-    salary: 150_000,
+    salary: 260_000,
   },
 
   // Product — multiplies engineering
@@ -194,7 +234,7 @@ export const GENERATORS: GeneratorDef[] = [
     baseCost: 40_000,
     costGrowth: 1.22,
     baseRate: 0,
-    salary: 40,
+    salary: 80,
   },
   {
     id: "designer",
@@ -205,7 +245,7 @@ export const GENERATORS: GeneratorDef[] = [
     baseCost: 900_000,
     costGrowth: 1.22,
     baseRate: 0,
-    salary: 250,
+    salary: 300,
   },
 
   // Go-to-market — multiplies the ship click, closes some deals too
@@ -218,7 +258,7 @@ export const GENERATORS: GeneratorDef[] = [
     baseCost: 3_000,
     costGrowth: 1.17,
     baseRate: 60,
-    salary: 20,
+    salary: 25,
   },
   {
     id: "growth-hacker",
@@ -229,7 +269,7 @@ export const GENERATORS: GeneratorDef[] = [
     baseCost: 2_000_000,
     costGrowth: 1.17,
     baseRate: 2_600,
-    salary: 800,
+    salary: 1_100,
   },
   {
     id: "cmo",
@@ -240,7 +280,8 @@ export const GENERATORS: GeneratorDef[] = [
     baseCost: 80_000_000,
     costGrowth: 1.17,
     baseRate: 40_000,
-    salary: 12_000,
+    salary: 17_000,
+    max: 1,
   },
 
   // People — makes every hire cheaper
@@ -253,7 +294,7 @@ export const GENERATORS: GeneratorDef[] = [
     baseCost: 150_000,
     costGrowth: 1.3,
     baseRate: 0,
-    salary: 120,
+    salary: 200,
   },
   {
     id: "chief-of-staff",
@@ -265,9 +306,23 @@ export const GENERATORS: GeneratorDef[] = [
     costGrowth: 1.3,
     baseRate: 0,
     salary: 7_000,
+    max: 1,
   },
 
-  // Finance — the company earns while you sleep
+  // Legal — reads the term sheet before you sign it
+  {
+    id: "lawyer",
+    dept: "legal",
+    name: "Startup lawyer",
+    flavor: "Reads the fine print you signed anyway.",
+    emoji: "⚖️",
+    baseCost: 400_000,
+    costGrowth: 1.3,
+    baseRate: 0,
+    salary: 700,
+  },
+
+  // Finance — keeps the burn honest
   {
     id: "cfo",
     dept: "finance",
@@ -278,12 +333,14 @@ export const GENERATORS: GeneratorDef[] = [
     costGrowth: 1.35,
     baseRate: 0,
     salary: 2_500,
+    max: 1,
   },
 ];
 
 export const UPGRADES: UpgradeDef[] = [
   {
     id: "coffee-machine",
+    emoji: "☕",
     name: "Coffee machine",
     flavor: "Interns work at 2× pour-over speed.",
     cost: 4_000,
@@ -293,6 +350,7 @@ export const UPGRADES: UpgradeDef[] = [
   },
   {
     id: "mech-keyboards",
+    emoji: "⌨️",
     name: "Mechanical keyboards",
     flavor: "Louder typing, bigger features. 2× per ship.",
     cost: 6_000,
@@ -302,6 +360,7 @@ export const UPGRADES: UpgradeDef[] = [
   },
   {
     id: "pair-programming",
+    emoji: "🧑‍🤝‍🧑",
     name: "Pair programming",
     flavor: "Junior devs produce 2× (and argue 3×).",
     cost: 25_000,
@@ -311,6 +370,7 @@ export const UPGRADES: UpgradeDef[] = [
   },
   {
     id: "ci-pipeline",
+    emoji: "✅",
     name: "CI pipeline",
     flavor: "Green checks for everyone: +50% all revenue.",
     cost: 100_000,
@@ -320,6 +380,7 @@ export const UPGRADES: UpgradeDef[] = [
   },
   {
     id: "rubber-ducks",
+    emoji: "🦆",
     name: "Rubber duck fleet",
     flavor: "Senior devs debug 2× faster by explaining to ducks.",
     cost: 300_000,
@@ -329,6 +390,7 @@ export const UPGRADES: UpgradeDef[] = [
   },
   {
     id: "dark-mode",
+    emoji: "🌙",
     name: "Dark mode",
     flavor: "The most requested feature. 3× per ship.",
     cost: 500_000,
@@ -338,6 +400,7 @@ export const UPGRADES: UpgradeDef[] = [
   },
   {
     id: "crm-nobody-updates",
+    emoji: "📇",
     name: "A CRM nobody updates",
     flavor: "Sales still closes 2× with it open in a tab.",
     cost: 600_000,
@@ -347,6 +410,7 @@ export const UPGRADES: UpgradeDef[] = [
   },
   {
     id: "okr-alignment",
+    emoji: "🎯",
     name: "OKR alignment",
     flavor: "Everyone rows the same direction: +50% all revenue.",
     cost: 4_000_000,
@@ -356,6 +420,7 @@ export const UPGRADES: UpgradeDef[] = [
   },
   {
     id: "design-system",
+    emoji: "📐",
     name: "Design system",
     flavor: "Staff engineers stop rebuilding buttons. 2× output.",
     cost: 9_000_000,
@@ -365,6 +430,7 @@ export const UPGRADES: UpgradeDef[] = [
   },
   {
     id: "viral-launch",
+    emoji: "🎬",
     name: "Viral launch video",
     flavor: "Growth hits the algorithm. 2× their revenue.",
     cost: 30_000_000,
@@ -374,6 +440,7 @@ export const UPGRADES: UpgradeDef[] = [
   },
   {
     id: "microservices",
+    emoji: "🧩",
     name: "Microservices rewrite",
     flavor: "Nobody knows how it works now. +50% all revenue.",
     cost: 80_000_000,
@@ -383,6 +450,7 @@ export const UPGRADES: UpgradeDef[] = [
   },
   {
     id: "fine-tuning",
+    emoji: "🧠",
     name: "Fine-tuned models",
     flavor: "The copilot learned your codebase. 2× output.",
     cost: 300_000_000,
@@ -392,6 +460,7 @@ export const UPGRADES: UpgradeDef[] = [
   },
   {
     id: "synergy",
+    emoji: "🤝",
     name: "Post-merger synergy",
     flavor: "The acquisitions finally integrate. 2× their revenue.",
     cost: 60_000_000_000,
@@ -477,7 +546,7 @@ export function researchById(id: string): ResearchDef | undefined {
 // ---- Ad campaigns: pay, roll the dice, maybe go viral.
 export const CAMPAIGN_COST_SECONDS = 30; // costs ~30s of gross revenue
 export const CAMPAIGN_MIN_COST = 1_000;
-export const CAMPAIGN_COOLDOWN_SECONDS = 60;
+export const CAMPAIGN_COOLDOWN_SECONDS = 30;
 
 export interface CampaignOutcome {
   tier: "flop" | "hit" | "viral";
@@ -498,7 +567,7 @@ export function rollCampaign(roll: number): CampaignOutcome {
 }
 
 // ---- Lucky events: a bubble floats by; tap it, roll the dice.
-export const LUCK_SPAWN_MEAN_SECONDS = 70;
+export const LUCK_SPAWN_MEAN_SECONDS = 35;
 export const LUCK_LIFETIME_SECONDS = 12;
 export const FRENZY_MULT = 7;
 export const FRENZY_SECONDS = 15;
@@ -650,5 +719,305 @@ export const MILESTONES: MilestoneDef[] = [
     emoji: "🛠️",
     lesson: "Engineers compound — if product keeps them pointed somewhere.",
     check: (s) => deptSize(s, "eng") >= 30,
+  },
+];
+
+// ---- clicking feel: crits and combos.
+/** Each eng manager auto-ships this many times per second. */
+export const MANAGER_SHIPS_PER_SEC = 0.5;
+/** Pure flavor: what the copilots are really costing you. */
+export const TOKENS_PER_COPILOT_PER_SEC = 250_000;
+
+// ---- quest chain: the "what do I do next" engine.
+export interface QuestView extends MilestoneView {
+  clicks: number;
+  research: { current: string | null; done: string[] };
+}
+
+export interface QuestDef {
+  id: string;
+  goal: string;
+  emoji: string;
+  reward: number;
+  check(state: QuestView, computed: { gross: number }): boolean;
+}
+
+const hires = (s: QuestView) => Object.values(s.generators).reduce((a, b) => a + b, 0);
+
+export const QUESTS: QuestDef[] = [
+  {
+    id: "first-intern",
+    goal: "Hire your first intern",
+    emoji: "🧑‍💻",
+    reward: 200,
+    check: (s) => (s.generators.intern ?? 0) >= 1,
+  },
+  {
+    id: "interns-3",
+    goal: "Grow to 3 interns",
+    emoji: "☕",
+    reward: 400,
+    check: (s) => (s.generators.intern ?? 0) >= 3,
+  },
+  {
+    id: "junior-1",
+    goal: "Hire a junior dev",
+    emoji: "👩‍💻",
+    reward: 800,
+    check: (s) => (s.generators["junior-dev"] ?? 0) >= 1,
+  },
+  {
+    id: "manager-1",
+    goal: "Hire an eng manager — they ship for you",
+    emoji: "🧑‍💼",
+    reward: 1_200,
+    check: (s) => (s.generators["eng-manager"] ?? 0) >= 1,
+  },
+  {
+    id: "earn-5k",
+    goal: "Earn $5K in total",
+    emoji: "💵",
+    reward: 1_500,
+    check: (s) => s.totalEarned >= 5_000,
+  },
+  {
+    id: "campaign-1",
+    goal: "Run your first ad campaign",
+    emoji: "📣",
+    reward: 3_000,
+    check: (s) => s.campaignsRun >= 1,
+  },
+  {
+    id: "sales-1",
+    goal: "Hire someone in sales",
+    emoji: "📞",
+    reward: 5_000,
+    check: (s) => (s.generators["sales-rep"] ?? 0) >= 1,
+  },
+  {
+    id: "rate-200",
+    goal: "Reach $200/s revenue",
+    emoji: "📈",
+    reward: 8_000,
+    check: (_s, c) => c.gross >= 200,
+  },
+  {
+    id: "research-1",
+    goal: "Start a research project",
+    emoji: "🔬",
+    reward: 15_000,
+    check: (s) => s.research.current !== null || s.research.done.length > 0,
+  },
+  {
+    id: "team-10",
+    goal: "Grow the team to 10",
+    emoji: "🏢",
+    reward: 30_000,
+    check: (s) => hires(s) >= 10,
+  },
+  {
+    id: "pm-1",
+    goal: "Hire a product manager",
+    emoji: "📋",
+    reward: 60_000,
+    check: (s) => (s.generators["product-manager"] ?? 0) >= 1,
+  },
+  {
+    id: "rate-2k",
+    goal: "Reach $2K/s revenue",
+    emoji: "💸",
+    reward: 150_000,
+    check: (_s, c) => c.gross >= 2_000,
+  },
+  {
+    id: "earn-2m",
+    goal: "Earn $2M in total",
+    emoji: "🤑",
+    reward: 400_000,
+    check: (s) => s.totalEarned >= 2_000_000,
+  },
+  {
+    id: "raise-1",
+    goal: "Raise your first round",
+    emoji: "🎉",
+    reward: 1_000_000,
+    check: (s) => s.rounds >= 1,
+  },
+  {
+    id: "rate-20k",
+    goal: "Reach $20K/s revenue",
+    emoji: "🌊",
+    reward: 3_000_000,
+    check: (_s, c) => c.gross >= 20_000,
+  },
+  {
+    id: "team-25",
+    goal: "Grow the team to 25",
+    emoji: "🏟️",
+    reward: 10_000_000,
+    check: (s) => hires(s) >= 25,
+  },
+];
+
+// ---- candidate traits: some ship fast, some burn cash, some are steady.
+export interface TraitDef {
+  id: string;
+  name: string;
+  emoji: string;
+  /** extra output, as a fraction of one unit (producers only) */
+  rateBonus: number;
+  /** extra salary, as a fraction of one unit */
+  payBonus: number;
+  blurb: string;
+}
+
+export const TRAITS: TraitDef[] = [
+  {
+    id: "steady",
+    name: "Steady",
+    emoji: "🧘",
+    rateBonus: 0,
+    payBonus: 0,
+    blurb: "Reliable. No surprises.",
+  },
+  {
+    id: "shipper",
+    name: "Shipper",
+    emoji: "🚀",
+    rateBonus: 0.25,
+    payBonus: 0,
+    blurb: "+25% output",
+  },
+  {
+    id: "expensive",
+    name: "Expensive taste",
+    emoji: "💸",
+    rateBonus: 0.4,
+    payBonus: 0.5,
+    blurb: "+40% output · +50% pay",
+  },
+  {
+    id: "slow",
+    name: "Slow starter",
+    emoji: "🐢",
+    rateBonus: -0.2,
+    payBonus: -0.2,
+    blurb: "−20% output · −20% pay",
+  },
+];
+
+/** roll ∈ [0,1) → trait; steady is the common case. */
+export function rollTrait(roll: number): TraitDef {
+  if (roll < 0.4) return TRAITS[0] as TraitDef;
+  if (roll < 0.65) return TRAITS[1] as TraitDef;
+  if (roll < 0.85) return TRAITS[3] as TraitDef;
+  return TRAITS[2] as TraitDef;
+}
+
+export function traitById(id: string): TraitDef | undefined {
+  return TRAITS.find((t) => t.id === id);
+}
+
+/** Severance: one month of salary to part ways. */
+export const SEVERANCE_MONTHS_SECONDS = 30;
+
+// ---- quarterly decisions: every 90 days the board wants an answer.
+export interface DecisionEffect {
+  /** instant cash, in days of gross revenue (can be negative) */
+  cashDays?: number;
+  /** temporary revenue multiplier … */
+  rev?: number;
+  /** … and/or burn multiplier … */
+  burn?: number;
+  /** … lasting this many days */
+  days?: number;
+  /** gamble: probability that `win` applies instead of `lose` */
+  gamble?: { p: number; win: DecisionEffect; lose: DecisionEffect };
+}
+
+export interface DecisionOption {
+  label: string;
+  desc: string;
+  effect: DecisionEffect;
+}
+
+export interface DecisionDef {
+  id: string;
+  title: string;
+  blurb: string;
+  options: DecisionOption[];
+}
+
+export const QUARTER_SECONDS = 90;
+
+export const DECISIONS: DecisionDef[] = [
+  {
+    id: "growth-vs-discipline",
+    title: "Board meeting: growth or discipline?",
+    blurb: "The deck is due. What's the story this quarter?",
+    options: [
+      {
+        label: "Blitz growth 📈",
+        desc: "Revenue ×1.6 for 30d — but burn ×1.4 too",
+        effect: { rev: 1.6, burn: 1.4, days: 30 },
+      },
+      {
+        label: "Tighten belts ✂️",
+        desc: "Burn ×0.7 for 30d — revenue dips ×0.9",
+        effect: { rev: 0.9, burn: 0.7, days: 30 },
+      },
+      { label: "Stay the course 🧭", desc: "No changes. Boring is a strategy.", effect: {} },
+    ],
+  },
+  {
+    id: "acquirer-email",
+    title: "An acquirer slid into your inbox",
+    blurb: '"Quick call?" — it\'s never quick.',
+    options: [
+      {
+        label: "Take the meeting 🤝",
+        desc: "50/50: a fat term sheet (+45d revenue) or a distracted team (×0.85 for 20d)",
+        effect: { gamble: { p: 0.5, win: { cashDays: 45 }, lose: { rev: 0.85, days: 20 } } },
+      },
+      {
+        label: "Archive it 🗑️",
+        desc: "The team never knows. Focus: +5d revenue now",
+        effect: { cashDays: 5 },
+      },
+    ],
+  },
+  {
+    id: "offsite",
+    title: "The team wants an offsite",
+    blurb: "Somewhere with a whiteboard and a pool.",
+    options: [
+      {
+        label: "Book it 🏝️",
+        desc: "Costs 15d of revenue — team ships ×1.25 for 45d",
+        effect: { cashDays: -15, rev: 1.25, days: 45 },
+      },
+      {
+        label: "Zoom offsite 💻",
+        desc: "Free. Morale ×1.05 for 15d. Someone stays muted the whole time.",
+        effect: { rev: 1.05, days: 15 },
+      },
+    ],
+  },
+  {
+    id: "press-cycle",
+    title: "A journalist is writing about your space",
+    blurb: "You can shape the story — or gamble on it.",
+    options: [
+      {
+        label: "Full access 📰",
+        desc: "60%: glowing feature (×1.5 for 25d). 40%: hit piece (×0.8 for 25d)",
+        effect: { gamble: { p: 0.6, win: { rev: 1.5, days: 25 }, lose: { rev: 0.8, days: 25 } } },
+      },
+      {
+        label: "No comment 🤐",
+        desc: "Safe. Nothing happens.",
+        effect: {},
+      },
+    ],
   },
 ];

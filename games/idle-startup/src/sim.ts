@@ -1,12 +1,17 @@
 // Pure game math. No DOM, no platform, no timers — everything here is
 // deterministic in (state, inputs); dice take an injected roll for tests.
+
+import { formatNumber } from "@games/gamekit";
 import {
   CAMPAIGN_COOLDOWN_SECONDS,
   CAMPAIGN_COST_SECONDS,
   CAMPAIGN_MIN_COST,
-  CLICK_BASE,
+  DECISIONS,
+  type DecisionDef,
+  type DecisionEffect,
   type DeptId,
-  FINANCE_OFFLINE_BONUS_SECONDS,
+  FINANCE_BURN_DISCOUNT,
+  FINANCE_BURN_DISCOUNT_CAP,
   FRENZY_MULT,
   FRENZY_SECONDS,
   GENERATORS,
@@ -14,19 +19,27 @@ import {
   GTM_CLICK_BONUS,
   generatorById,
   INVESTOR_BONUS,
+  LEGAL_SOFTEN,
+  LEGAL_SOFTEN_FLOOR,
+  MANAGER_SHIPS_PER_SEC,
   MILESTONES,
   type MilestoneDef,
-  OFFLINE_BASE_CAP_SECONDS,
-  OFFLINE_MAX_CAP_SECONDS,
   PEOPLE_DISCOUNT,
   PEOPLE_DISCOUNT_CAP,
   PRESTIGE_UNIT,
   PRODUCT_ENG_BONUS,
+  QUARTER_SECONDS,
+  QUESTS,
+  type QuestDef,
   RESEARCH,
   type ResearchDef,
   researchById,
   rollCampaign,
   rollLuck,
+  SEVERANCE_MONTHS_SECONDS,
+  SHIP_VALUE,
+  TOKENS_PER_COPILOT_PER_SEC,
+  traitById,
   UPGRADES,
   type UpgradeDef,
   upgradeById,
@@ -60,11 +73,10 @@ export function hireDiscount(state: GameState): number {
   return 1 - Math.min(PEOPLE_DISCOUNT_CAP, PEOPLE_DISCOUNT * deptCount(state, "people"));
 }
 
-/** Finance hires extend the offline-earnings window. */
-export function offlineCapSeconds(state: GameState): number {
-  return Math.min(
-    OFFLINE_MAX_CAP_SECONDS,
-    OFFLINE_BASE_CAP_SECONDS + FINANCE_OFFLINE_BONUS_SECONDS * deptCount(state, "finance"),
+/** Finance hires trim payroll burn, down to −40%. */
+export function financeBurnMult(state: GameState): number {
+  return (
+    1 - Math.min(FINANCE_BURN_DISCOUNT_CAP, FINANCE_BURN_DISCOUNT * deptCount(state, "finance"))
   );
 }
 
@@ -102,7 +114,8 @@ export function generatorUnitRate(state: GameState, def: GeneratorDef): number {
     deptBonus *
     prestigeMult(state) *
     researchMult(state) *
-    state.boosts.adMult
+    state.boosts.adMult *
+    state.boosts.decisionRev
   );
 }
 
@@ -113,32 +126,54 @@ export function royaltiesPerSec(state: GameState): number {
     const def = researchById(id);
     if (def) total += def.royalty;
   }
-  return total * prestigeMult(state) * state.boosts.adMult;
+  return total * prestigeMult(state) * state.boosts.adMult * state.boosts.decisionRev;
 }
 
-/** Gross revenue per second (team production + research royalties). */
+/** Eng managers auto-ship: automated founder clicks, per second. */
+export function managerShipsPerSec(state: GameState): number {
+  const managers = owned(state, "eng-manager");
+  if (managers === 0) return 0;
+  return managers * MANAGER_SHIPS_PER_SEC * shipValue(state);
+}
+
+/** Pure flavor: what the AI copilots cost in tokens per day. */
+export function tokensPerSec(state: GameState): number {
+  return owned(state, "ai-copilot") * TOKENS_PER_COPILOT_PER_SEC;
+}
+
+/** Headcount in fractional units: count plus trait output bonuses. */
+export function effectiveUnits(state: GameState, generatorId: string): number {
+  return owned(state, generatorId) + (state.roleMods[generatorId]?.rate ?? 0);
+}
+
+/** Gross revenue per second (team + royalties + managers auto-shipping). */
 export function grossPerSec(state: GameState): number {
-  let total = royaltiesPerSec(state);
+  let total = royaltiesPerSec(state) + managerShipsPerSec(state);
   for (const def of GENERATORS) {
-    const count = owned(state, def.id);
-    if (count > 0) total += count * generatorUnitRate(state, def);
+    if (owned(state, def.id) > 0)
+      total += effectiveUnits(state, def.id) * generatorUnitRate(state, def);
   }
   return total;
 }
 
-/** Salary expectations grow 25% with every round raised. */
-export function burnMult(state: GameState): number {
-  return 1.25 ** state.rounds;
+/** Per-round salary jump; lawyers negotiate it down (never below +5%). */
+export function roundJump(state: GameState): number {
+  return Math.max(LEGAL_SOFTEN_FLOOR, 1.25 - LEGAL_SOFTEN * deptCount(state, "legal"));
 }
 
-/** Payroll burn per second. */
+/** Salary expectations compound with every round raised. */
+export function burnMult(state: GameState): number {
+  return roundJump(state) ** state.rounds;
+}
+
+/** Payroll burn per second, traits included. */
 export function burnPerSec(state: GameState): number {
   let total = 0;
   for (const def of GENERATORS) {
     const count = owned(state, def.id);
-    if (count > 0) total += count * def.salary;
+    if (count > 0) total += (count + (state.roleMods[def.id]?.pay ?? 0)) * def.salary;
   }
-  return total * burnMult(state);
+  return total * burnMult(state) * financeBurnMult(state) * state.boosts.decisionBurn;
 }
 
 export function netPerSec(state: GameState): number {
@@ -152,10 +187,11 @@ export function runwaySeconds(state: GameState): number {
   return Math.max(0, state.cash / -net);
 }
 
-export function clickPower(state: GameState): number {
+/** Value of one shipped feature — managers do the shipping now. */
+export function shipValue(state: GameState): number {
   const frenzy = state.boosts.frenzyRemaining > 0 ? FRENZY_MULT : 1;
   return (
-    CLICK_BASE *
+    SHIP_VALUE *
     upgradeMult(state, "click") *
     gtmClickMult(state) *
     prestigeMult(state) *
@@ -170,6 +206,10 @@ export interface TickEvents {
   crashed: boolean;
   researchDone: ResearchDef | null;
   milestones: MilestoneDef[];
+  /** quest completed this tick (reward already granted), if any */
+  quest: QuestDef | null;
+  /** the board wants a quarterly decision */
+  decisionDue: DecisionDef | null;
 }
 
 function checkMilestones(state: GameState, gross: number, net: number): MilestoneDef[] {
@@ -184,8 +224,22 @@ function checkMilestones(state: GameState, gross: number, net: number): Mileston
   return hit;
 }
 
-/** 30 real seconds = 1 company month. */
+/** One real second is one company day; 30 days make a month. */
 export const MONTH_SECONDS = 30;
+
+/** Format a real-seconds span as company time: "12d", "2mo 4d", "1y 2mo". */
+export function gameDays(seconds: number): string {
+  const days = Math.ceil(seconds);
+  if (days < 30) return `${days}d`;
+  const months = Math.floor(days / 30);
+  if (months < 12) {
+    const rest = days % 30;
+    return rest > 0 ? `${months}mo ${rest}d` : `${months}mo`;
+  }
+  const years = Math.floor(months / 12);
+  const restMo = months % 12;
+  return restMo > 0 ? `${years}y ${restMo}mo` : `${years}y`;
+}
 
 export function companyMonths(state: GameState): number {
   return Math.floor(state.ageSeconds / MONTH_SECONDS);
@@ -213,6 +267,13 @@ export function tick(state: GameState, dtSeconds: number): TickEvents {
   }
   if (b.adCooldown > 0) b.adCooldown = Math.max(0, b.adCooldown - dtSeconds);
   if (b.frenzyRemaining > 0) b.frenzyRemaining = Math.max(0, b.frenzyRemaining - dtSeconds);
+  if (b.decisionRemaining > 0) {
+    b.decisionRemaining = Math.max(0, b.decisionRemaining - dtSeconds);
+    if (b.decisionRemaining === 0) {
+      b.decisionRev = 1;
+      b.decisionBurn = 1;
+    }
+  }
 
   // research progress
   let researchDone: ResearchDef | null = null;
@@ -235,16 +296,149 @@ export function tick(state: GameState, dtSeconds: number): TickEvents {
 
   const crashed = state.cash < 0;
   const milestones = checkMilestones(state, gross, netPerSec(state));
-  return { crashed, researchDone, milestones };
+
+  // quest chain: one active goal at a time; reward lands instantly
+  let quest: QuestDef | null = null;
+  const active = QUESTS[state.questIndex];
+  if (active?.check(state, { gross })) {
+    state.cash += active.reward;
+    state.totalEarned += active.reward;
+    state.questIndex += 1;
+    quest = active;
+  }
+
+  // quarterly board decision
+  let decisionDue: DecisionDef | null = null;
+  const quarter = Math.floor(state.ageSeconds / QUARTER_SECONDS);
+  if (quarter > state.lastDecisionQuarter) {
+    state.lastDecisionQuarter = quarter;
+    decisionDue = DECISIONS[(quarter - 1) % DECISIONS.length] ?? null;
+  }
+
+  return { crashed, researchDone, milestones, quest, decisionDue };
 }
 
-/** The click action. Returns the amount earned (for UI particles). */
-export function shipClick(state: GameState): number {
-  const amount = clickPower(state);
-  state.cash += amount;
-  state.totalEarned += amount;
-  state.clicks += 1;
-  return amount;
+/** Resolve a quarterly decision. Returns a one-line result for the toast. */
+export function applyDecision(
+  state: GameState,
+  decision: DecisionDef,
+  optionIndex: number,
+  roll: number = Math.random(),
+): string {
+  const option = decision.options[optionIndex];
+  if (!option) return "";
+  let effect: DecisionEffect = option.effect;
+  let flavor = "";
+  if (effect.gamble) {
+    const won = roll < effect.gamble.p;
+    flavor = won ? "🎲 It paid off! " : "🎲 It backfired. ";
+    effect = won ? effect.gamble.win : effect.gamble.lose;
+  }
+  if (effect.cashDays) {
+    const amount = grossPerSec(state) * effect.cashDays;
+    state.cash += amount;
+    if (amount > 0) state.totalEarned += amount;
+    flavor += `${amount >= 0 ? "+" : "−"}$${formatNumber(Math.abs(amount))}. `;
+  }
+  if (effect.days && (effect.rev || effect.burn)) {
+    state.boosts.decisionRev = effect.rev ?? 1;
+    state.boosts.decisionBurn = effect.burn ?? 1;
+    state.boosts.decisionRemaining = effect.days;
+    flavor += `Effects last ${effect.days}d.`;
+  }
+  return flavor.trim() || "Noted. Back to work.";
+}
+
+/** The goal currently on screen, or null when the chain is finished. */
+export function currentQuest(state: GameState): QuestDef | null {
+  return QUESTS[state.questIndex] ?? null;
+}
+
+// ---- transparency: every addition and multiplier, itemized -----------------
+
+export interface BreakdownLine {
+  label: string;
+  value: string;
+}
+
+export interface Breakdown {
+  revenue: BreakdownLine[];
+  multipliers: BreakdownLine[];
+  payroll: BreakdownLine[];
+}
+
+export function breakdown(state: GameState): Breakdown {
+  const revenue: BreakdownLine[] = [];
+  for (const dept of ["eng", "gtm"] as const) {
+    let sum = 0;
+    for (const def of GENERATORS) {
+      if (def.dept !== dept) continue;
+      const count = owned(state, def.id);
+      if (count > 0) sum += count * generatorUnitRate(state, def);
+    }
+    if (sum > 0)
+      revenue.push({
+        label: dept === "eng" ? "Engineering" : "Go-to-market",
+        value: `$${formatNumber(sum)}/day`,
+      });
+  }
+  const managers = managerShipsPerSec(state);
+  if (managers > 0)
+    revenue.push({ label: "Managers shipping", value: `$${formatNumber(managers)}/day` });
+  const royal = royaltiesPerSec(state);
+  if (royal > 0)
+    revenue.push({ label: "Research royalties", value: `$${formatNumber(royal)}/day` });
+
+  const multipliers: BreakdownLine[] = [];
+  const em = engMult(state);
+  if (em > 1) multipliers.push({ label: `Product team (eng revenue)`, value: `×${em.toFixed(2)}` });
+  const gm = gtmClickMult(state);
+  if (gm > 1) multipliers.push({ label: "GTM team (per ship)", value: `×${gm.toFixed(2)}` });
+  const pm = prestigeMult(state);
+  if (pm > 1)
+    multipliers.push({ label: `Investors (◆ ${state.investors})`, value: `×${pm.toFixed(2)}` });
+  const rm = researchMult(state);
+  if (rm > 1) multipliers.push({ label: "Research", value: `×${rm.toFixed(2)}` });
+  if (state.boosts.adMult > 1)
+    multipliers.push({ label: "Ad campaign (temporary)", value: `×${state.boosts.adMult}` });
+  if (state.boosts.frenzyRemaining > 0)
+    multipliers.push({ label: "Ship frenzy (temporary)", value: `×${FRENZY_MULT}` });
+  for (const id of state.upgrades) {
+    const def = upgradeById(id);
+    if (def) {
+      const target =
+        def.target === "all"
+          ? "everything"
+          : def.target === "click"
+            ? "per ship"
+            : (generatorById(def.target)?.name ?? def.target);
+      multipliers.push({ label: `${def.emoji} ${def.name} (${target})`, value: `×${def.mult}` });
+    }
+  }
+  const hd = hireDiscount(state);
+  if (hd < 1)
+    multipliers.push({
+      label: "People team (hire costs)",
+      value: `−${Math.round((1 - hd) * 100)}%`,
+    });
+
+  const payroll: BreakdownLine[] = [];
+  let base = 0;
+  for (const def of GENERATORS) base += owned(state, def.id) * def.salary;
+  if (base > 0) payroll.push({ label: "Base payroll", value: `$${formatNumber(base)}/day` });
+  const bm = burnMult(state);
+  if (bm > 1)
+    payroll.push({ label: `Round expectations (${state.rounds})`, value: `×${bm.toFixed(2)}` });
+  const fm = financeBurnMult(state);
+  if (fm < 1) payroll.push({ label: "Finance team", value: `−${Math.round((1 - fm) * 100)}%` });
+  const rj = roundJump(state);
+  if (rj < 1.25)
+    payroll.push({
+      label: "Legal (round jump softened)",
+      value: `+${Math.round((rj - 1) * 100)}%/round`,
+    });
+
+  return { revenue, multipliers, payroll };
 }
 
 // ---- hiring & upgrades ------------------------------------------------------
@@ -258,9 +452,15 @@ export function hireCost(state: GameState, def: GeneratorDef): number {
   return generatorCost(def, owned(state, def.id)) * hireDiscount(state);
 }
 
+/** True when a role is at its hard cap (C-suite is a party of one). */
+export function roleFull(state: GameState, def: GeneratorDef): boolean {
+  return def.max !== undefined && owned(state, def.id) >= def.max;
+}
+
 export function buyGenerator(state: GameState, generatorId: string): boolean {
   const def = generatorById(generatorId);
   if (!def) return false;
+  if (roleFull(state, def)) return false;
   const cost = hireCost(state, def);
   if (state.cash < cost) return false;
   state.cash -= cost;
@@ -307,6 +507,19 @@ export function generatorVisible(state: GameState, def: GeneratorDef): boolean {
 
 /** Cash each new investor point injects at a raise. */
 export const INJECTION_PER_POINT = 2_500_000;
+/** Ownership handed over at every round. */
+export const DILUTION_PER_ROUND = 0.15;
+/** Company value ≈ a year of revenue × the growth-story multiple. */
+export const VALUATION_MULTIPLE = 10;
+
+export function valuation(state: GameState): number {
+  return grossPerSec(state) * 365 * VALUATION_MULTIPLE;
+}
+
+/** What the founder's stake is worth right now. */
+export function founderNetWorth(state: GameState): number {
+  return valuation(state) * state.equity;
+}
 
 /** Investor points a raise would bank right now (incremental within the run). */
 export function raiseGain(state: GameState): number {
@@ -333,6 +546,7 @@ export function raiseRound(state: GameState): number {
   state.raisedThisRun += gain;
   state.rounds += 1;
   state.cash += gain * INJECTION_PER_POINT;
+  state.equity *= 1 - DILUTION_PER_ROUND;
   return gain;
 }
 
@@ -349,19 +563,67 @@ export function doCrash(state: GameState): void {
   state.rounds = 0;
   state.raisedThisRun = 0;
   state.team = [];
+  state.roleMods = {};
   state.ageSeconds = 0;
+  state.equity = 1;
   state.research.current = null;
   state.research.progress = 0;
   state.boosts.adMult = 1;
   state.boosts.adRemaining = 0;
   state.boosts.adCooldown = 0;
   state.boosts.frenzyRemaining = 0;
+  state.boosts.decisionRev = 1;
+  state.boosts.decisionBurn = 1;
+  state.boosts.decisionRemaining = 0;
+  state.lastDecisionQuarter = 0;
 }
 
-/** Remember a hire's face (display-capped so saves stay tiny). */
-export function recordHire(state: GameState, seed: number): void {
-  state.team.push(seed);
-  if (state.team.length > 24) state.team.shift();
+/** Remember a hire's face, name, role, and skills (display-capped). */
+export function recordHire(
+  state: GameState,
+  seed: number,
+  name: string,
+  roleId: string,
+  traitId = "steady",
+): void {
+  state.team.push({ s: seed, n: name, r: roleId, t: traitId });
+  if (state.team.length > 48) state.team.shift();
+  const trait = traitById(traitId);
+  if (trait && (trait.rateBonus !== 0 || trait.payBonus !== 0)) {
+    const mods = state.roleMods[roleId] ?? { rate: 0, pay: 0 };
+    mods.rate += trait.rateBonus;
+    mods.pay += trait.payBonus;
+    state.roleMods[roleId] = mods;
+  }
+}
+
+/** One month of that person's salary, paid to part ways. */
+export function severanceCost(state: GameState, teamIndex: number): number {
+  const mate = state.team[teamIndex];
+  const def = mate && generatorById(mate.r);
+  if (!mate || !def) return 0;
+  const trait = traitById(mate.t);
+  return def.salary * (1 + (trait?.payBonus ?? 0)) * SEVERANCE_MONTHS_SECONDS * burnMult(state);
+}
+
+/** Fire a teammate (severance due). Returns the severance paid, or null. */
+export function fireMate(state: GameState, teamIndex: number): number | null {
+  const mate = state.team[teamIndex];
+  const def = mate && generatorById(mate.r);
+  if (!mate || !def || owned(state, mate.r) === 0) return null;
+  const cost = severanceCost(state, teamIndex);
+  if (state.cash < cost) return null;
+  state.cash -= cost;
+  state.generators[mate.r] = owned(state, mate.r) - 1;
+  const trait = traitById(mate.t);
+  if (trait) {
+    const mods = state.roleMods[mate.r] ?? { rate: 0, pay: 0 };
+    mods.rate -= trait.rateBonus;
+    mods.pay -= trait.payBonus;
+    state.roleMods[mate.r] = mods;
+  }
+  state.team.splice(teamIndex, 1);
+  return cost;
 }
 
 // ---- campaigns, luck, research actions ----------------------------------------
@@ -417,12 +679,4 @@ export function startResearch(state: GameState): boolean {
   state.research.current = def.id;
   state.research.progress = 0;
   return true;
-}
-
-/** Grant capped offline production (net floored at 0 — payroll pauses too). */
-export function applyOffline(state: GameState, seconds: number): number {
-  const amount = Math.max(0, netPerSec(state)) * seconds;
-  state.cash += amount;
-  state.totalEarned += grossPerSec(state) * seconds * (amount > 0 ? 1 : 0);
-  return amount;
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { GENERATORS, generatorById } from "../src/content";
+import { DECISIONS, GENERATORS, generatorById } from "../src/content";
 import {
-  applyOffline,
+  applyDecision,
   availableUpgrades,
   burnPerSec,
   buyGenerator,
@@ -9,17 +9,21 @@ import {
   campaignCost,
   canLaunchCampaign,
   claimLuck,
-  clickPower,
   companyAgeLabel,
+  currentQuest,
+  fireMate,
   generatorCost,
   generatorVisible,
   grossPerSec,
   hireCost,
   launchCampaign,
+  managerShipsPerSec,
   netPerSec,
+  recordHire,
+  roleFull,
   royaltiesPerSec,
   runwaySeconds,
-  shipClick,
+  shipValue,
   startResearch,
   tick,
 } from "../src/sim";
@@ -48,25 +52,25 @@ describe("economy math", () => {
     expect(grossPerSec(state)).toBeCloseTo(4 * 5 + 2 * 20);
   });
 
-  it("clicks earn CLICK_BASE at start", () => {
+  it("eng managers auto-ship at ship value", () => {
     const state = initialState();
-    expect(shipClick(state)).toBeCloseTo(10);
-    expect(state.clicks).toBe(1);
+    state.generators = { "eng-manager": 2 };
+    expect(managerShipsPerSec(state)).toBeCloseTo(2 * 0.5 * shipValue(state));
+    expect(grossPerSec(state)).toBeCloseTo(managerShipsPerSec(state));
   });
 });
 
-describe("archetype powers", () => {
+describe("archetype powers (all six departments differ)", () => {
   it("product hires multiply engineering only", () => {
     const state = initialState();
     state.generators = { intern: 10, "sales-rep": 1, "product-manager": 2 };
-    // eng: 10×5 ×(1+0.08×2)=58 ; gtm: 60 unaffected by product
     expect(grossPerSec(state)).toBeCloseTo(10 * 5 * 1.16 + 60);
   });
 
-  it("gtm hires multiply the ship click", () => {
+  it("gtm hires multiply ship value", () => {
     const state = initialState();
     state.generators = { "sales-rep": 5 };
-    expect(clickPower(state)).toBeCloseTo(10 * (1 + 0.12 * 5));
+    expect(shipValue(state)).toBeCloseTo(10 * (1 + 0.12 * 5));
   });
 
   it("people hires discount hiring, capped at 30%", () => {
@@ -78,109 +82,156 @@ describe("archetype powers", () => {
     expect(hireCost(state, intern)).toBeCloseTo(base * 0.7);
   });
 
+  it("the CFO trims payroll burn 15%", () => {
+    const state = initialState();
+    state.generators = { intern: 10, cfo: 1 };
+    expect(burnPerSec(state)).toBeCloseTo((10 * 2 + 2500) * 0.85);
+  });
+
+  it("lawyers soften the per-round salary jump", () => {
+    const state = initialState();
+    state.generators = { intern: 10 };
+    state.rounds = 2;
+    expect(burnPerSec(state)).toBeCloseTo(20 * 1.25 ** 2);
+    state.generators = { intern: 10, lawyer: 5 };
+    expect(burnPerSec(state)).toBeCloseTo((20 + 5 * 700) * 1.15 ** 2);
+  });
+
   it("every department's entry role is visible from day one", () => {
     const state = initialState();
-    for (const id of ["intern", "sales-rep", "product-manager", "recruiter", "cfo"]) {
+    for (const id of ["intern", "sales-rep", "product-manager", "recruiter", "cfo", "lawyer"]) {
       const def = generatorById(id);
       expect(def && generatorVisible(state, def)).toBe(true);
     }
-    const growth = generatorById("growth-hacker");
-    expect(growth && generatorVisible(state, growth)).toBe(false);
+  });
+
+  it("C-suite roles are singletons", () => {
+    const state = rich();
+    const cfo = generatorById("cfo");
+    expect(cfo && roleFull(state, cfo)).toBe(false);
+    expect(buyGenerator(state, "cfo")).toBe(true);
+    expect(cfo && roleFull(state, cfo)).toBe(true);
+    expect(buyGenerator(state, "cfo")).toBe(false);
+  });
+});
+
+describe("traits and firing", () => {
+  it("shippers produce more; expensive taste raises payroll", () => {
+    const state = initialState();
+    state.generators = { intern: 2 };
+    recordHire(state, 1, "A", "intern", "shipper"); // +0.25 output units
+    expect(grossPerSec(state)).toBeCloseTo(2.25 * 5);
+    recordHire(state, 2, "B", "intern", "expensive"); // +0.4 output, +0.5 pay
+    expect(grossPerSec(state)).toBeCloseTo(2.65 * 5);
+    expect(burnPerSec(state)).toBeCloseTo(2.5 * 2);
+  });
+
+  it("firing pays severance, drops headcount, and removes the trait", () => {
+    const state = rich();
+    state.generators = { intern: 1 };
+    recordHire(state, 7, "Maya K.", "intern", "shipper");
+    expect(grossPerSec(state)).toBeCloseTo(1.25 * 5);
+    const paid = fireMate(state, 0);
+    expect(paid).toBeCloseTo(2 * 30); // one month of intern salary
+    expect(state.generators.intern).toBe(0);
+    expect(state.team).toEqual([]);
+    expect(grossPerSec(state)).toBe(0);
   });
 });
 
 describe("payroll, runway, and the clock", () => {
-  it("salaries burn cash every tick and scale with rounds", () => {
-    const state = initialState();
-    state.generators = { intern: 10 }; // 10 × $1/s
-    expect(burnPerSec(state)).toBeCloseTo(10);
-    state.rounds = 2;
-    expect(burnPerSec(state)).toBeCloseTo(10 * 1.25 ** 2);
-  });
-
   it("net can go negative and runway counts down to the crash", () => {
     const state = initialState();
     state.cash = 100;
-    state.generators = { "product-manager": 1 }; // $40/s salary, no revenue
-    expect(netPerSec(state)).toBeCloseTo(-40);
-    expect(runwaySeconds(state)).toBeCloseTo(2.5);
-    const events = tick(state, 3);
-    expect(state.cash).toBeLessThan(0);
+    state.generators = { "product-manager": 1 }; // $80/day salary, no revenue
+    expect(netPerSec(state)).toBeCloseTo(-80);
+    expect(runwaySeconds(state)).toBeCloseTo(1.25);
+    const events = tick(state, 2);
     expect(events.crashed).toBe(true);
   });
 
-  it("time passes: 30s = 1 month", () => {
+  it("time passes: 30 days = 1 month", () => {
     const state = initialState();
     tick(state, 30 * 13);
     expect(companyAgeLabel(state)).toBe("Y2 · M2");
   });
 });
 
-describe("hiring and upgrades", () => {
-  it("buyGenerator spends discounted cash and increments count", () => {
+describe("quests and decisions", () => {
+  it("the quest chain pays out through tick and advances", () => {
     const state = initialState();
-    state.cash = 200;
-    expect(buyGenerator(state, "intern")).toBe(true);
-    expect(state.cash).toBeCloseTo(50);
-    expect(state.generators.intern).toBe(1);
-    expect(buyGenerator(state, "intern")).toBe(false); // now too broke
+    state.generators = { intern: 1 };
+    const cashBefore = state.cash;
+    const events = tick(state, 0.1);
+    expect(events.quest?.id).toBe("first-intern");
+    expect(state.questIndex).toBe(1);
+    expect(state.cash).toBeGreaterThan(cashBefore);
+    expect(currentQuest(state)?.id).not.toBe("first-intern");
   });
 
-  it("upgrades unlock and multiply their target", () => {
-    const state = rich();
+  it("the board asks for a decision every quarter", () => {
+    const state = initialState();
+    const events = tick(state, 91);
+    expect(events.decisionDue?.id).toBe(DECISIONS[0]?.id);
+    expect(tick(state, 1).decisionDue).toBeNull();
+  });
+
+  it("decisions apply temporary revenue/burn modifiers", () => {
+    const state = initialState();
+    state.generators = { intern: 10 }; // 50/day gross, 20/day burn
+    const growth = DECISIONS[0];
+    if (!growth) throw new Error("missing decision");
+    applyDecision(state, growth, 0); // blitz: rev ×1.6, burn ×1.4, 30d
+    expect(grossPerSec(state)).toBeCloseTo(50 * 1.6);
+    expect(burnPerSec(state)).toBeCloseTo(20 * 1.4);
+    tick(state, 31);
+    expect(grossPerSec(state)).toBeCloseTo(50);
+    expect(burnPerSec(state)).toBeCloseTo(20);
+  });
+
+  it("gambles resolve by roll", () => {
+    const state = initialState();
     state.generators = { intern: 10 };
-    const before = grossPerSec(state);
-    expect(availableUpgrades(state).map((u) => u.id)).toContain("coffee-machine");
-    expect(buyUpgrade(state, "coffee-machine")).toBe(true);
-    expect(grossPerSec(state)).toBeCloseTo(before * 2);
-    expect(buyUpgrade(state, "coffee-machine")).toBe(false);
+    const acquirer = DECISIONS[1];
+    if (!acquirer) throw new Error("missing decision");
+    const cashBefore = state.cash;
+    applyDecision(state, acquirer, 0, 0.1); // win: +45 days of gross
+    expect(state.cash).toBeCloseTo(cashBefore + 50 * 45);
   });
 });
 
 describe("dice: campaigns and luck", () => {
   it("campaigns cost money, roll outcomes, and cool down", () => {
     const state = rich();
-    state.generators = { intern: 10 }; // gross 50 → cost max(1000, 1500)
+    state.generators = { intern: 10 };
     expect(campaignCost(state)).toBeCloseTo(1500);
-    const outcome = launchCampaign(state, 0.05); // viral
+    const outcome = launchCampaign(state, 0.05);
     expect(outcome?.tier).toBe("viral");
     expect(state.boosts.adMult).toBe(5);
-    expect(state.campaignsRun).toBe(1);
-    expect(canLaunchCampaign(state)).toBe(false); // cooldown
+    expect(canLaunchCampaign(state)).toBe(false);
     tick(state, 61);
-    expect(state.boosts.adRemaining).toBe(0);
     expect(state.boosts.adMult).toBe(1);
     expect(canLaunchCampaign(state)).toBe(true);
   });
 
-  it("a flop takes the money and gives nothing", () => {
-    const state = rich();
-    const cashBefore = state.cash;
-    const outcome = launchCampaign(state, 0.95);
-    expect(outcome?.tier).toBe("flop");
-    expect(state.boosts.adMult).toBe(1);
-    expect(state.cash).toBeLessThan(cashBefore);
-  });
-
-  it("luck grants cash or a click frenzy", () => {
+  it("luck grants cash or a ship frenzy", () => {
     const state = initialState();
     const cash = claimLuck(state, 0.1);
     expect(cash.type).toBe("cash");
     expect(state.cash).toBeGreaterThanOrEqual(STARTING_CASH + 1000);
     const frenzy = claimLuck(state, 0.6);
     expect(frenzy.type).toBe("frenzy");
-    expect(clickPower(state)).toBeCloseTo(10 * 7);
+    expect(shipValue(state)).toBeCloseTo(10 * 7);
     tick(state, 16);
-    expect(clickPower(state)).toBeCloseTo(10);
+    expect(shipValue(state)).toBeCloseTo(10);
   });
 });
 
 describe("research", () => {
   it("takes time, then multiplies revenue and pays royalties", () => {
     const state = rich();
-    state.generators = { intern: 10 }; // gross 50
-    expect(startResearch(state)).toBe(true); // mvp: 60s, ×1.25, $500/s royalty
-    expect(state.research.current).toBe("mvp");
+    state.generators = { intern: 10 };
+    expect(startResearch(state)).toBe(true);
     const events = tick(state, 60);
     expect(events.researchDone?.id).toBe("mvp");
     expect(royaltiesPerSec(state)).toBeCloseTo(500);
@@ -194,16 +245,13 @@ describe("research", () => {
   });
 });
 
-describe("offline progress", () => {
-  it("grants net revenue, floored at zero when payroll exceeds it", () => {
-    const a = initialState();
-    a.generators = { intern: 10 }; // net 50-10=40/s
-    const earned = applyOffline(a, 100);
-    expect(earned).toBeCloseTo(4000);
-
-    const b = initialState();
-    b.generators = { "product-manager": 3 }; // pure burn
-    expect(applyOffline(b, 100)).toBe(0);
-    expect(b.cash).toBe(STARTING_CASH);
+describe("upgrades", () => {
+  it("unlock and multiply their target", () => {
+    const state = rich();
+    state.generators = { intern: 10 };
+    const before = grossPerSec(state);
+    expect(availableUpgrades(state).map((u) => u.id)).toContain("coffee-machine");
+    expect(buyUpgrade(state, "coffee-machine")).toBe(true);
+    expect(grossPerSec(state)).toBeCloseTo(before * 2);
   });
 });

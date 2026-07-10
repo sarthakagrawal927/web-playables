@@ -1,6 +1,6 @@
 import type { Migration } from "@games/gamekit";
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export interface ResearchState {
   /** research id in progress, or null */
@@ -11,7 +11,22 @@ export interface ResearchState {
   done: string[];
 }
 
+export interface TeamMate {
+  /** avatar seed */
+  s: number;
+  /** chosen name */
+  n: string;
+  /** role (generator id) they were hired into */
+  r: string;
+  /** trait id (skills; affects output and pay) */
+  t: string;
+}
+
 export interface BoostState {
+  /** quarterly-decision modifiers (1 = none) and remaining days */
+  decisionRev: number;
+  decisionBurn: number;
+  decisionRemaining: number;
   /** ad-campaign revenue multiplier (1 = none) and its remaining seconds */
   adMult: number;
   adRemaining: number;
@@ -46,18 +61,36 @@ export interface GameState {
   boosts: BoostState;
   /** avatar seed of the player's founder character (null until chosen) */
   founder: number | null;
-  /** avatar seeds of everyone hired this run, in hire order (display-capped) */
-  team: number[];
+  founderName: string;
+  companyName: string;
+  /** everyone hired this run, in hire order (display-capped) */
+  team: TeamMate[];
   /** company age in simulated seconds (30s = 1 month); resets on crash */
   ageSeconds: number;
+  /** index into the QUESTS chain (lifetime; quests don't reset on crash) */
+  questIndex: number;
+  /** founder's remaining ownership, 1 = 100%; each raise dilutes it */
+  equity: number;
+  /** aggregated trait effects per role, in fractional units */
+  roleMods: Record<string, { rate: number; pay: number }>;
+  /** last quarter (index) the board asked for a decision */
+  lastDecisionQuarter: number;
 }
 
 export function initialBoosts(): BoostState {
-  return { adMult: 1, adRemaining: 0, adCooldown: 0, frenzyRemaining: 0 };
+  return {
+    adMult: 1,
+    adRemaining: 0,
+    adCooldown: 0,
+    frenzyRemaining: 0,
+    decisionRev: 1,
+    decisionBurn: 1,
+    decisionRemaining: 0,
+  };
 }
 
 /** Friends-and-family money: enough to feel real, not enough to skip clicking. */
-export const STARTING_CASH = 500;
+export const STARTING_CASH = 1_000;
 
 export function initialState(): GameState {
   return {
@@ -75,8 +108,14 @@ export function initialState(): GameState {
     research: { current: null, progress: 0, done: [] },
     boosts: initialBoosts(),
     founder: null,
+    founderName: "",
+    companyName: "",
     team: [],
     ageSeconds: 0,
+    questIndex: 0,
+    equity: 1,
+    roleMods: {},
+    lastDecisionQuarter: 0,
   };
 }
 
@@ -93,7 +132,27 @@ export const migrations: Record<number, Migration> = {
     research: { current: null, progress: 0, done: [] },
     boosts: initialBoosts(),
     founder: null,
+    founderName: "",
+    companyName: "",
     team: [],
     ageSeconds: 0,
+    questIndex: 0,
+    equity: 1,
+    roleMods: {},
+    lastDecisionQuarter: 0,
   }),
+  // v2 → v3: names — founder, company, and each hire's chosen name.
+  2: (state) => {
+    const s = state as { team?: number[] } & Record<string, unknown>;
+    return {
+      ...s,
+      founderName: "",
+      companyName: "",
+      team: (s.team ?? []).map((seed) => ({ s: seed, n: "", r: "", t: "steady" })),
+      questIndex: 0,
+      equity: 1,
+      roleMods: {},
+      lastDecisionQuarter: 0,
+    };
+  },
 };

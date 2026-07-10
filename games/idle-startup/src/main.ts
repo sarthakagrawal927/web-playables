@@ -2,14 +2,7 @@ import "@fontsource-variable/space-grotesk";
 import "@fontsource-variable/jetbrains-mono";
 import "./style.css";
 
-import {
-  createLoop,
-  createPlatform,
-  createSaveManager,
-  elapsedOfflineSeconds,
-  formatDuration,
-  formatNumber,
-} from "@games/gamekit";
+import { createLoop, createPlatform, createSaveManager, formatNumber } from "@games/gamekit";
 import { LUCK_LIFETIME_SECONDS, LUCK_SPAWN_MEAN_SECONDS, nextRoundName } from "./content";
 import * as sim from "./sim";
 import { type GameState, initialState, migrations, SAVE_VERSION } from "./state";
@@ -28,9 +21,7 @@ async function boot() {
     initial: initialState,
   });
 
-  const { state, savedAt } = await saves.load();
-  const offlineSeconds = elapsedOfflineSeconds(savedAt, Date.now(), sim.offlineCapSeconds(state));
-  const offlineEarned = offlineSeconds > 60 ? sim.applyOffline(state, offlineSeconds) : 0;
+  const { state } = await saves.load();
 
   const persist = async () => {
     try {
@@ -47,16 +38,22 @@ async function boot() {
   let luckRemaining = 0;
 
   const ui = createUI(app, {
-    onShip(x, y) {
-      const amount = sim.shipClick(state);
-      ui.spawnCash(amount, x, y);
-      ui.render(state);
-    },
-    onHire(id, avatarSeed) {
+    onHire(id, avatarSeed, name, traitId) {
       if (sim.buyGenerator(state, id)) {
-        sim.recordHire(state, avatarSeed);
+        sim.recordHire(state, avatarSeed, name, id, traitId);
         ui.render(state);
         void persist();
+      }
+    },
+    onFire(teamIndex) {
+      const mate = state.team[teamIndex];
+      const paid = sim.fireMate(state, teamIndex);
+      if (paid !== null && mate) {
+        ui.toast(`${mate.n} left with $${formatNumber(paid)} severance. Payroll just got lighter.`);
+        ui.render(state);
+        void persist();
+      } else {
+        ui.toast("Can't afford the severance right now.");
       }
     },
     onBuyUpgrade(id) {
@@ -71,7 +68,7 @@ async function boot() {
       if (gained > 0) {
         ui.celebrate(
           `${round} raised! 🎉`,
-          `◆ +${formatNumber(gained)} investors · +$${formatNumber(gained * sim.INJECTION_PER_POINT)} — salaries just went up`,
+          `◆ +${formatNumber(gained)} investors · +$${formatNumber(gained * sim.INJECTION_PER_POINT)} — you now own ${Math.round(state.equity * 100)}%`,
         );
         ui.render(state);
         void persist();
@@ -102,14 +99,23 @@ async function boot() {
       }
       ui.render(state);
     },
+    onDecision(decision, optionIndex) {
+      const result = sim.applyDecision(state, decision, optionIndex, Math.random());
+      ui.toast(result);
+      ui.render(state);
+      void persist();
+    },
     onRestart() {
       crashed = false;
       ui.render(state);
       void persist();
     },
-    onPickFounder(seed) {
+    onPickFounder(seed, founderName, companyName) {
       state.founder = seed;
-      ui.toast("Day one. Ship something. 🚀");
+      state.founderName = founderName;
+      state.companyName = companyName;
+      document.title = `${companyName} — Idle Startup`;
+      ui.toast(`Day one at ${companyName}. Ship something. 🚀`);
       ui.render(state);
       void persist();
     },
@@ -120,6 +126,15 @@ async function boot() {
     if (crashed) return;
     const events = sim.tick(state, dt);
     ui.render(state);
+
+    if (events.decisionDue) {
+      ui.showDecision(events.decisionDue);
+    }
+    if (events.quest) {
+      ui.toast(
+        `🎯 ${events.quest.emoji} ${events.quest.goal} — reward +$${formatNumber(events.quest.reward)}!`,
+      );
+    }
 
     for (const m of events.milestones) {
       ui.celebrate(`${m.emoji} ${m.name}`, m.lesson);
@@ -159,17 +174,13 @@ async function boot() {
     }
   });
 
+  if (state.companyName) document.title = `${state.companyName} — Idle Startup`;
   ui.render(state);
   requestAnimationFrame(() => {
     platform.firstFrameReady();
     loop.start();
     platform.gameReady();
     if (state.founder === null) ui.showFounderPicker();
-    if (offlineEarned > 0) {
-      ui.toast(
-        `While you were away (${formatDuration(offlineSeconds)}): +$${formatNumber(offlineEarned)}`,
-      );
-    }
   });
 
   platform.onPauseChange((paused) => {

@@ -1122,3 +1122,406 @@ body.paused *::after {
 .crash-btn:hover {
   transform: scale(1.04);
 }
+
+/* ================= fun layer: quests, combos, crits ================= */
+
+.quest-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-color: color-mix(in srgb, var(--amber) 40%, var(--line));
+}
+
+.quest-emoji {
+  font-size: 1.2rem;
+}
+
+.quest-goal {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.quest-reward {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--amber);
+}
+
+.combo-chip {
+  position: absolute;
+  top: -12px;
+  right: 12px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.78rem;
+  padding: 3px 10px;
+  border-radius: 999px;
+  color: var(--ink-950);
+  background: linear-gradient(180deg, #ffd36e, #ff9d42);
+  box-shadow: 0 4px 14px rgba(255, 157, 66, 0.5);
+}
+
+.cash-pop.crit {
+  font-size: 1.35rem;
+  color: #ffd36e;
+  text-shadow: 0 0 18px rgba(255, 196, 94, 0.9);
+}
+
+.danger-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  box-shadow: inset 0 0 120px rgba(255, 90, 90, 0.35);
+  animation: blink 1.2s steps(2, start) infinite;
+}
+
+/* founder-modal name inputs */
+.name-label {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin: 12px 0 5px;
+}
+
+.name-row {
+  display: flex;
+  gap: 8px;
+}
+
+.name-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 11px;
+  border: 1px solid var(--line-bright);
+  background: var(--ink-900);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.92rem;
+}
+
+.name-input:focus-visible {
+  outline: 2px solid var(--violet);
+  outline-offset: 1px;
+}
+
+.shuffle-btn {
+  flex-shrink: 0;
+  width: 42px;
+  border-radius: 11px;
+  border: 1px solid var(--line-bright);
+  font-size: 1.1rem;
+}
+
+.shuffle-btn:hover {
+  border-color: var(--amber);
+}
+
+.candidate.selected {
+  border-color: var(--cash);
+  box-shadow: 0 0 18px rgba(62, 224, 137, 0.3);
+}
+
+.start-btn {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  padding: 13px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--ink-950);
+  background: linear-gradient(180deg, var(--cash) 0%, var(--cash-deep) 100%);
+  box-shadow: 0 6px 24px rgba(62, 224, 137, 0.35);
+}
+
+.start-btn:disabled {
+  opacity: 0.4;
+  box-shadow: none;
+}
+
+/* squad view */
+.faces-strip {
+  align-items: center;
+  border-radius: 999px;
+  padding: 2px 6px 2px 2px;
+  transition: background 150ms ease;
+}
+
+.faces-strip:hover {
+  background: color-mix(in srgb, var(--ink-700) 70%, transparent);
+}
+
+.strip-more {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  color: var(--text-faint);
+  margin-left: 4px;
+  white-space: nowrap;
+}
+
+.squad-modal {
+  max-height: 86dvh;
+  overflow-y: auto;
+}
+
+.squad-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.squad-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 12px 6px 10px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--ink-700) 45%, transparent);
+  text-align: center;
+}
+
+.squad-card.founder-card {
+  border-color: color-mix(in srgb, var(--cash) 45%, var(--line));
+}
+
+.squad-face {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.squad-face svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.squad-name {
+  font-weight: 600;
+  font-size: 0.8rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.squad-role {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--text-faint);
+}
+
+/* per-role mini crew + tokens chip + bigger chart */
+.row-faces {
+  display: inline-flex;
+  margin-left: 2px;
+}
+
+.row-face {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1.5px solid var(--ink-800);
+  margin-left: -6px;
+}
+
+.row-face svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.boost-chip.tokens {
+  color: #9bd0ff;
+  border: 1px solid rgba(94, 168, 255, 0.4);
+  background: rgba(94, 168, 255, 0.1);
+}
+
+.revenue-chart {
+  height: 96px;
+}
+
+/* dept tiles: the org chart at a glance */
+.dept-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.dept-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 6px;
+  border-radius: 12px;
+  border: 1px solid hsl(var(--dept-h) 60% 45% / 0.45);
+  background: hsl(var(--dept-h) 55% 50% / 0.08);
+  text-align: center;
+}
+
+.tile-icon {
+  font-size: 1.25rem;
+}
+
+.tile-name {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: hsl(var(--dept-h) 70% 68%);
+}
+
+.tile-count {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.tile-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.62rem;
+  color: var(--text-dim);
+}
+
+/* ledger (additions & multipliers) */
+.details-btn {
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-faint);
+  padding: 4px 0;
+}
+
+.details-btn:hover {
+  color: var(--text);
+}
+
+.founder-line {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.76rem;
+  color: var(--violet);
+  margin-top: 6px;
+}
+
+.ledger-modal {
+  max-height: 86dvh;
+  overflow-y: auto;
+}
+
+.ledger-heading {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin: 16px 0 6px;
+}
+
+.ledger-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
+  font-size: 0.85rem;
+}
+
+.ledger-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--cash);
+  white-space: nowrap;
+}
+
+/* traits + firing */
+.trait-chip {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  padding: 2px 7px;
+  border-radius: 999px;
+  color: var(--text-dim);
+  border: 1px solid var(--line-bright);
+  white-space: nowrap;
+}
+
+.squad-trait {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--amber);
+}
+
+.fire-btn {
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: #ff8a80;
+  border: 1px solid rgba(255, 138, 128, 0.35);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+.fire-btn:hover {
+  background: rgba(255, 138, 128, 0.12);
+}
+
+.gen-row.full {
+  opacity: 0.9;
+}
+
+.gen-row.full .gen-cost {
+  color: var(--text-faint);
+}
+
+/* quarterly decisions */
+.decision-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.decision-option {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 13px;
+  border: 1px solid var(--line-bright);
+  background: color-mix(in srgb, var(--ink-700) 55%, transparent);
+  transition:
+    border-color 150ms ease,
+    transform 120ms ease;
+}
+
+.decision-option:hover {
+  border-color: var(--amber);
+  transform: translateY(-1px);
+}
+
+.decision-label {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.decision-desc {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+}

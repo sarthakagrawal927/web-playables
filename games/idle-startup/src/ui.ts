@@ -1,6 +1,7 @@
-import { formatDuration, formatNumber } from "@games/gamekit";
+import { formatNumber } from "@games/gamekit";
 import { randomSeed, renderAvatar } from "./avatar";
 import { createRevenueChart } from "./chart";
+import type { DecisionDef } from "./content";
 import {
   DEPTS,
   GENERATORS,
@@ -9,49 +10,63 @@ import {
   nextRoundName,
   PRESTIGE_UNIT,
   researchById,
+  rollTrait,
   roundName,
+  traitById,
   type UpgradeDef,
 } from "./content";
 import {
   availableUpgrades,
+  breakdown,
   burnPerSec,
   campaignCost,
   canLaunchCampaign,
-  clickPower,
   companyAgeLabel,
+  currentQuest,
   earningsToNextInvestor,
+  engMult,
+  financeBurnMult,
+  founderNetWorth,
+  gameDays,
   generatorUnitRate,
   generatorVisible,
   grossPerSec,
+  gtmClickMult,
   hireCost,
+  hireDiscount,
   INJECTION_PER_POINT,
   nextResearch,
   owned,
   raiseGain,
+  roleFull,
+  roundJump,
   runwaySeconds,
+  severanceCost,
+  tokensPerSec,
 } from "./sim";
 import type { GameState } from "./state";
 
 export interface UIHooks {
-  onShip(clientX: number, clientY: number): void;
-  /** Hire one unit of a role, remembering the chosen candidate's face. */
-  onHire(id: string, avatarSeed: number): void;
+  /** Hire one unit of a role, remembering the chosen candidate's face + name. */
+  onHire(id: string, avatarSeed: number, name: string, traitId: string): void;
   onBuyUpgrade(id: string): void;
   onRaise(): void;
   onCampaign(): void;
   onResearch(): void;
   onLuckClaim(): void;
+  onFire(teamIndex: number): void;
+  onDecision(decision: DecisionDef, optionIndex: number): void;
   onRestart(): void;
-  onPickFounder(seed: number): void;
+  onPickFounder(seed: number, founderName: string, companyName: string): void;
 }
 
 export interface UI {
   render(state: GameState): void;
   toast(message: string): void;
-  spawnCash(amount: number, x: number, y: number): void;
   celebrate(title: string, sub: string): void;
   showCrash(sub: string): void;
   showFounderPicker(): void;
+  showDecision(decision: DecisionDef): void;
   spawnLuckBubble(): void;
   removeLuckBubble(): void;
   setPaused(paused: boolean): void;
@@ -59,33 +74,155 @@ export interface UI {
 
 const money = (n: number) => `$${formatNumber(n)}`;
 
-const CANDIDATE_NAMES = [
+const FIRST_NAMES = [
   "Aditi",
+  "Aiko",
+  "Alma",
+  "Amara",
+  "Ansel",
+  "Aria",
+  "Arjun",
+  "Asha",
+  "Bao",
+  "Beatrix",
+  "Bilal",
   "Bo",
+  "Camila",
   "Chen",
+  "Chidi",
+  "Clara",
+  "Dara",
   "Devi",
+  "Diego",
+  "Dmitri",
+  "Eitan",
+  "Elif",
+  "Emeka",
   "Esha",
+  "Ezra",
   "Farah",
+  "Felix",
+  "Fern",
   "Gio",
+  "Greta",
   "Hana",
+  "Hassan",
+  "Hiro",
+  "Ida",
+  "Igor",
+  "Ines",
   "Ivy",
   "Jae",
+  "Jamal",
+  "Juno",
   "Kai",
+  "Kavya",
+  "Keziah",
+  "Kofi",
+  "Lars",
+  "Leila",
+  "Lin",
+  "Lucia",
   "Luz",
+  "Maceo",
+  "Mai",
+  "Malik",
+  "Mara",
+  "Mateo",
+  "Maya",
+  "Mina",
   "Mo",
+  "Naomi",
   "Nia",
+  "Nikhil",
+  "Noor",
+  "Oisin",
+  "Olga",
   "Omar",
+  "Ona",
+  "Otto",
+  "Paulo",
   "Pia",
+  "Priya",
   "Quinn",
+  "Rafa",
+  "Ravi",
+  "Remy",
+  "Rin",
   "Rio",
+  "Rosa",
+  "Ruth",
   "Sam",
+  "Sana",
+  "Santi",
+  "Sasha",
+  "Selin",
+  "Shreya",
+  "Sofia",
+  "Suki",
+  "Tam",
   "Tara",
+  "Tavi",
+  "Teo",
+  "Tessa",
+  "Tomas",
   "Uma",
+  "Vera",
   "Vik",
+  "Wei",
   "Wren",
+  "Xena",
+  "Yara",
   "Yuki",
+  "Yusuf",
+  "Zadie",
   "Zane",
+  "Zara",
+  "Ziggy",
+  "Zoe",
+  "Anouk",
+  "Bodhi",
+  "Cleo",
+  "Dax",
+  "Effie",
+  "Freya",
+  "Gus",
+  "Hollis",
+  "Io",
+  "Jules",
+  "Kit",
+  "Lior",
+  "Marisol",
+  "Nova",
+  "Ozzy",
 ];
+const SURNAME_LETTERS = "ABCDEFGHJKLMNPRSTVWZ";
+
+function makeCandidateName(): string {
+  const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)] ?? "Alex";
+  const letter = SURNAME_LETTERS[Math.floor(Math.random() * SURNAME_LETTERS.length)] ?? "K";
+  return `${first} ${letter}.`;
+}
+
+const CO_PREFIX = [
+  "Rocket",
+  "Mint",
+  "Pixel",
+  "Cloud",
+  "Turbo",
+  "Loop",
+  "Stack",
+  "Nova",
+  "Quark",
+  "Snack",
+];
+const CO_SUFFIX = ["ly", "ify", " Labs", "HQ", "Base", " Works", "Hub", "Forge", ".ai", "Nest"];
+
+function suggestCompanyName(): string {
+  const a = CO_PREFIX[Math.floor(Math.random() * CO_PREFIX.length)] ?? "Rocket";
+  const b = CO_SUFFIX[Math.floor(Math.random() * CO_SUFFIX.length)] ?? "ly";
+  return `${a}${b}`;
+}
 
 function deptHue(generatorId: string): number {
   const dept = generatorById(generatorId)?.dept;
@@ -115,6 +252,7 @@ interface GenRow {
   count: HTMLElement;
   cost: HTMLElement;
   meta: HTMLElement;
+  faces: HTMLElement;
 }
 
 export function createUI(app: HTMLElement, hooks: UIHooks): UI {
@@ -134,7 +272,8 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
   const header = el("header", "top");
   const founderFace = el("span", "founder-face");
   const brand = el("div", "brand");
-  brand.append(founderFace, el("span", "brand-name", "Idle Startup"));
+  const brandName = el("span", "brand-name", "Idle Startup");
+  brand.append(founderFace, brandName);
   const ageChip = el("span", "age-chip", "Y1 · M1");
   const roundBadge = el("span", "round-badge", roundName(0));
   const investorsChip = el("span", "investors-chip hidden", "");
@@ -151,29 +290,27 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
   const chartCanvas = el("canvas", "revenue-chart");
   chartCanvas.setAttribute("aria-hidden", "true");
   const chart = createRevenueChart(chartCanvas);
+  const founderLine = el("div", "founder-line", "");
+  const detailsBtn = el("button", "details-btn", "additions & multipliers ▸");
+  detailsBtn.type = "button";
+  detailsBtn.addEventListener("click", () => {
+    if (lastState) showBreakdown(lastState);
+  });
   cashCard.append(
     el("div", "eyebrow", "Company balance"),
     cashValue,
     cashNet,
     cashRunway,
+    founderLine,
     boostChips,
     chartCanvas,
+    detailsBtn,
   );
 
-  const shipBtn = el("button", "ship-btn");
-  const shipAmount = el("span", "ship-amount", "+$10");
-  shipBtn.append(
-    el("span", "ship-emoji", "🚀"),
-    el("span", "ship-label", "Ship feature"),
-    shipAmount,
-  );
-  shipBtn.addEventListener("click", (e) => {
-    const rect = shipBtn.getBoundingClientRect();
-    const x = e.clientX || rect.left + rect.width / 2;
-    const y = e.clientY || rect.top;
-    if (!reducedMotion) boing(shipBtn);
-    hooks.onShip(x, y);
-  });
+  const questCard = el("div", "card quest-card");
+  const questGoal = el("span", "quest-goal", "");
+  const questReward = el("span", "quest-reward", "");
+  questCard.append(el("span", "quest-emoji", "🎯"), questGoal, questReward);
 
   // actions: ad campaign (dice) + research lab
   const actionsCard = el("div", "card actions-card");
@@ -207,16 +344,38 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
   fundBtn.addEventListener("click", () => hooks.onRaise());
   fundCard.append(el("div", "eyebrow", "Funding"), fundStatus, fundBar, fundBtn);
 
-  founder.append(cashCard, shipBtn, actionsCard, fundCard);
+  founder.append(cashCard, questCard, actionsCard, fundCard);
 
   // ops column: org chart by department + upgrades
   const ops = el("section", "ops");
   const teamPanel = el("section", "panel");
   const teamTitleRow = el("div", "panel-title-row");
   teamTitleRow.append(el("h2", "panel-title", "The org"));
-  const facesStrip = el("div", "faces-strip");
+  const facesStrip = el("button", "faces-strip");
+  facesStrip.type = "button";
+  facesStrip.setAttribute("aria-label", "See your squad");
+  facesStrip.addEventListener("click", () => {
+    if (lastState) showSquad(lastState);
+  });
   teamTitleRow.append(facesStrip);
   teamPanel.append(teamTitleRow);
+  const deptTiles = new Map<string, { count: HTMLElement; value: HTMLElement }>();
+  const tileBoard = el("div", "dept-tiles");
+  for (const dept of DEPTS) {
+    const tile = el("div", "dept-tile");
+    tile.style.setProperty("--dept-h", String(dept.hue));
+    const count = el("span", "tile-count", "0");
+    const value = el("span", "tile-value", "—");
+    tile.append(
+      el("span", "tile-icon", dept.icon),
+      el("span", "tile-name", dept.name),
+      count,
+      value,
+    );
+    tileBoard.append(tile);
+    deptTiles.set(dept.id, { count, value });
+  }
+  teamPanel.append(tileBoard);
   const deptBoxes = new Map<string, { head: HTMLElement; box: HTMLElement }>();
   for (const dept of DEPTS) {
     const head = el("div", "dept-head hidden");
@@ -236,6 +395,8 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
   ops.append(teamPanel, upgPanel);
   frame.append(header, founder, ops);
 
+  const vignette = el("div", "danger-vignette hidden");
+  app.append(vignette);
   const fxLayer = el("div", "fx-layer");
   const toastBox = el("div", "toast");
   const celebration = el("div", "celebration hidden");
@@ -256,24 +417,28 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
     modal.style.setProperty("--medal-h", String(deptHue(def.id)));
     modal.append(
       el("div", "modal-title", "Who gets the offer?"),
-      el("div", "modal-sub", `${def.name} · ${money(cost)} · then ${money(def.salary)}/s salary`),
+      el("div", "modal-sub", `${def.name} · ${money(cost)} · then ${money(def.salary)}/day salary`),
     );
     const rowBox = el("div", "candidates");
-    const names = [...CANDIDATE_NAMES].sort(() => Math.random() - 0.5).slice(0, 3);
     for (let i = 0; i < 3; i++) {
       const seed = randomSeed();
       const cand = el("button", "candidate");
       cand.type = "button";
       const face = el("span", "candidate-face");
       renderAvatar(face, seed);
+      const name = makeCandidateName();
+      const trait = rollTrait(Math.random());
+      const chip = el("span", "trait-chip", `${trait.emoji} ${trait.blurb}`);
+      chip.style.setProperty("--trait-tone", trait.rateBonus > 0 ? "1" : "0");
       cand.append(
         face,
-        el("span", "candidate-name", names[i] ?? "Alex"),
+        el("span", "candidate-name", name),
+        chip,
         el("span", "candidate-hire", "Hire"),
       );
       cand.addEventListener("click", () => {
         closeHireModal();
-        hooks.onHire(def.id, seed);
+        hooks.onHire(def.id, seed, name, trait.id);
       });
       rowBox.append(cand);
     }
@@ -281,6 +446,122 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
     const cancel = el("button", "modal-cancel", "Not now");
     cancel.addEventListener("click", closeHireModal);
     modal.append(cancel);
+    hireVeil.append(modal);
+    hireVeil.classList.remove("hidden");
+  };
+
+  // ---- quarterly board decision --------------------------------------------
+  const showDecision = (decision: DecisionDef) => {
+    hireVeil.textContent = "";
+    const modal = el("div", "modal decision-modal");
+    modal.append(el("div", "modal-title", decision.title), el("div", "modal-sub", decision.blurb));
+    const box = el("div", "decision-options");
+    decision.options.forEach((option, index) => {
+      const btn = el("button", "decision-option");
+      btn.type = "button";
+      btn.append(
+        el("span", "decision-label", option.label),
+        el("span", "decision-desc", option.desc),
+      );
+      btn.addEventListener("click", () => {
+        hireVeil.classList.add("hidden");
+        hooks.onDecision(decision, index);
+      });
+      box.append(btn);
+    });
+    modal.append(box);
+    hireVeil.append(modal);
+    hireVeil.classList.remove("hidden");
+  };
+
+  // ---- the ledger: every addition and multiplier, itemized ----------------
+  const showBreakdown = (state: GameState) => {
+    hireVeil.textContent = "";
+    const modal = el("div", "modal ledger-modal");
+    modal.append(
+      el("div", "modal-title", "How the money works"),
+      el("div", "modal-sub", "Every addition and multiplier, live."),
+    );
+    const data = breakdown(state);
+    const section = (title: string, lines: { label: string; value: string }[]) => {
+      if (lines.length === 0) return;
+      modal.append(el("div", "ledger-heading", title));
+      for (const line of lines) {
+        const row = el("div", "ledger-row");
+        row.append(el("span", "ledger-label", line.label), el("span", "ledger-value", line.value));
+        modal.append(row);
+      }
+    };
+    section("Revenue", data.revenue);
+    section("Multipliers", data.multipliers);
+    section("Payroll", data.payroll);
+    const close = el("button", "modal-cancel", "Got it");
+    close.addEventListener("click", () => hireVeil.classList.add("hidden"));
+    modal.append(close);
+    hireVeil.append(modal);
+    hireVeil.classList.remove("hidden");
+  };
+
+  // ---- squad view: the whole company, face by face ------------------------
+  const showSquad = (state: GameState) => {
+    hireVeil.textContent = "";
+    const modal = el("div", "modal squad-modal");
+    modal.append(
+      el(
+        "div",
+        "modal-title",
+        state.companyName ? `${state.companyName} — the squad` : "The squad",
+      ),
+      el(
+        "div",
+        "modal-sub",
+        `${state.team.length + (state.founder !== null ? 1 : 0)} people building this thing`,
+      ),
+    );
+    const grid = el("div", "squad-grid");
+    if (state.founder !== null) {
+      const card = el("div", "squad-card founder-card");
+      const face = el("span", "squad-face");
+      renderAvatar(face, state.founder);
+      card.append(
+        face,
+        el("span", "squad-name", state.founderName || "Founder"),
+        el("span", "squad-role", "CEO · you"),
+      );
+      grid.append(card);
+    }
+    state.team.forEach((mate, index) => {
+      const card = el("div", "squad-card");
+      const face = el("span", "squad-face");
+      renderAvatar(face, mate.s);
+      const role = generatorById(mate.r);
+      const trait = traitById(mate.t);
+      card.append(
+        face,
+        el("span", "squad-name", mate.n || "Early crew"),
+        el("span", "squad-role", role ? `${role.emoji} ${role.name}` : "Day-one believer"),
+      );
+      if (trait && trait.id !== "steady") {
+        card.append(el("span", "squad-trait", `${trait.emoji} ${trait.name}`));
+      }
+      const fire = el("button", "fire-btn", `Fire · $${formatNumber(severanceCost(state, index))}`);
+      fire.type = "button";
+      fire.addEventListener("click", () => {
+        hireVeil.classList.add("hidden");
+        hooks.onFire(index);
+      });
+      card.append(fire);
+      grid.prepend(card);
+    });
+    if (state.founder !== null) {
+      // founder card stays first
+      const first = grid.querySelector(".founder-card");
+      if (first) grid.prepend(first);
+    }
+    modal.append(grid);
+    const close = el("button", "modal-cancel", "Back to work");
+    close.addEventListener("click", () => hireVeil.classList.add("hidden"));
+    modal.append(close);
     hireVeil.append(modal);
     hireVeil.classList.remove("hidden");
   };
@@ -294,27 +575,79 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
       el("div", "modal-sub", "Pick your character. Rule #1: don't run out of money."),
     );
     const grid = el("div", "candidates founder-grid");
+    let chosenSeed: number | null = null;
+    const nameField = el("input", "name-input");
+    nameField.type = "text";
+    nameField.maxLength = 18;
+    nameField.placeholder = "Founder name";
     const fill = () => {
       grid.textContent = "";
+      chosenSeed = null;
+      startBtn.disabled = true;
       for (let i = 0; i < 6; i++) {
         const seed = randomSeed();
         const cand = el("button", "candidate");
         cand.type = "button";
         const face = el("span", "candidate-face");
         renderAvatar(face, seed);
-        cand.append(face, el("span", "candidate-hire", "That's me"));
+        const name = makeCandidateName();
+        cand.append(face, el("span", "candidate-name", name));
         cand.addEventListener("click", () => {
-          hireVeil.classList.add("hidden");
-          hooks.onPickFounder(seed);
+          chosenSeed = seed;
+          if (!nameField.value.trim() || nameField.dataset.auto !== "0") {
+            nameField.value = name;
+            nameField.dataset.auto = "1";
+          }
+          for (const other of grid.children) other.classList.remove("selected");
+          cand.classList.add("selected");
+          startBtn.disabled = false;
         });
         grid.append(cand);
       }
     };
-    fill();
-    modal.append(grid);
+    nameField.addEventListener("input", () => {
+      nameField.dataset.auto = "0";
+    });
+
+    const coRow = el("div", "name-row");
+    const coField = el("input", "name-input");
+    coField.type = "text";
+    coField.maxLength = 22;
+    coField.placeholder = "Company name";
+    coField.value = suggestCompanyName();
+    const coShuffle = el("button", "shuffle-btn", "🎲");
+    coShuffle.type = "button";
+    coShuffle.setAttribute("aria-label", "Suggest another company name");
+    coShuffle.addEventListener("click", () => {
+      coField.value = suggestCompanyName();
+    });
+    coRow.append(coField, coShuffle);
+
+    const startBtn = el("button", "start-btn", "Start building 🚀");
+    startBtn.disabled = true;
+    startBtn.addEventListener("click", () => {
+      if (chosenSeed === null) return;
+      hireVeil.classList.add("hidden");
+      hooks.onPickFounder(
+        chosenSeed,
+        nameField.value.trim() || "Founder",
+        coField.value.trim() || "My Startup",
+      );
+    });
+
     const reroll = el("button", "modal-cancel", "🎲 Show me different people");
     reroll.addEventListener("click", fill);
-    modal.append(reroll);
+
+    fill();
+    modal.append(
+      grid,
+      reroll,
+      el("div", "name-label", "Founder"),
+      nameField,
+      el("div", "name-label", "Company"),
+      coRow,
+      startBtn,
+    );
     hireVeil.append(modal);
     hireVeil.classList.remove("hidden");
   };
@@ -331,6 +664,8 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
     const nameLine = el("div", "gen-name", def.name);
     const count = el("span", "gen-count", "");
     nameLine.append(count);
+    const rowFaces = el("span", "row-faces");
+    nameLine.append(rowFaces);
     body.append(nameLine, el("div", "gen-flavor", def.flavor));
     const buy = el("div", "gen-buy");
     const cost = el("span", "gen-cost", "");
@@ -338,11 +673,12 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
     buy.append(cost, meta);
     root.append(emoji, body, buy);
     root.addEventListener("click", () => {
+      if (lastState && roleFull(lastState, def)) return;
       if (!reducedMotion) boing(root);
       openHireModal(def, lastHireCosts.get(def.id) ?? def.baseCost);
     });
     deptBoxes.get(def.dept)?.box.append(root);
-    genRows.set(def.id, { root, count, cost, meta });
+    genRows.set(def.id, { root, count, cost, meta, faces: rowFaces });
   }
   const lastHireCosts = new Map<string, number>();
 
@@ -367,7 +703,7 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
         chip.style.setProperty("--chip-h", String(deptHue(def.target)));
       }
       card.append(
-        el("div", "upg-name", def.name),
+        el("div", "upg-name", `${def.emoji} ${def.name}`),
         el("div", "upg-flavor", def.flavor),
         chip,
         el("div", "upg-cost", money(def.cost)),
@@ -380,39 +716,6 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
   };
 
   // ---- fx -------------------------------------------------------------------
-  const POP_POOL: HTMLSpanElement[] = [];
-  let popAlternate = false;
-  const spawnCash = (amount: number, x: number, y: number) => {
-    if (reducedMotion) return;
-    const pop = POP_POOL.pop() ?? el("span", "cash-pop");
-    popAlternate = !popAlternate;
-    pop.textContent = popAlternate ? `+${money(amount)}` : "🪙";
-    pop.style.left = `${x}px`;
-    pop.style.top = `${y}px`;
-    fxLayer.append(pop);
-    const dx = (Math.random() - 0.5) * 120;
-    const spin = (Math.random() - 0.5) * 60;
-    const anim = pop.animate(
-      [
-        { transform: "translate(-50%, 0) scale(0.6) rotate(0deg)", opacity: 1 },
-        {
-          transform: `translate(calc(-50% + ${dx * 0.4}px), -60px) scale(1.25) rotate(${spin * 0.5}deg)`,
-          opacity: 1,
-          offset: 0.35,
-        },
-        {
-          transform: `translate(calc(-50% + ${dx}px), -150px) scale(0.9) rotate(${spin}deg)`,
-          opacity: 0,
-        },
-      ],
-      { duration: 1000, easing: "cubic-bezier(0.2, 0.8, 0.3, 1)" },
-    );
-    anim.onfinish = () => {
-      pop.remove();
-      if (POP_POOL.length < 24) POP_POOL.push(pop);
-    };
-  };
-
   const CONFETTI_COLORS = ["#3ee089", "#a08bff", "#ffc45e", "#e9ecfa", "#5ea8ff", "#ff7ab8"];
   const rainConfetti = (host: HTMLElement, count: number) => {
     if (reducedMotion) return;
@@ -512,7 +815,9 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
   let renderCount = 0;
   let lastFounderSeed: number | null = null;
   let lastTeamLen = -1;
+  let lastState: GameState | null = null;
   const render = (state: GameState) => {
+    lastState = state;
     displayCash = reducedMotion ? state.cash : displayCash + (state.cash - displayCash) * 0.35;
     if (Math.abs(displayCash - state.cash) < 0.5) displayCash = state.cash;
     cashValue.textContent = money(Math.max(0, displayCash));
@@ -522,15 +827,15 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
     const net = gross - burn;
     cashNet.textContent =
       burn > 0
-        ? `${net >= 0 ? "+" : "−"}${money(Math.abs(net))}/s net · ${money(burn)}/s payroll`
-        : `+${money(gross)}/s revenue`;
+        ? `${net >= 0 ? "+" : "−"}${money(Math.abs(net))}/day net · ${money(burn)}/day payroll`
+        : `+${money(gross)}/day revenue`;
     cashNet.classList.toggle("negative", net < 0);
 
     const runway = runwaySeconds(state);
     const showRunway = net < 0 && Number.isFinite(runway);
     cashRunway.classList.toggle("hidden", !showRunway);
     if (showRunway) {
-      cashRunway.textContent = `⏳ Runway ${formatDuration(runway)} — grow or crash`;
+      cashRunway.textContent = `⏳ Runway ${gameDays(runway)} — grow or crash`;
       cashRunway.classList.toggle("critical", runway < 60);
     }
 
@@ -540,7 +845,7 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
         el(
           "span",
           "boost-chip ad",
-          `📣 ×${state.boosts.adMult} · ${Math.ceil(state.boosts.adRemaining)}s`,
+          `📣 ×${state.boosts.adMult} · ${gameDays(state.boosts.adRemaining)}`,
         ),
       );
     }
@@ -549,12 +854,26 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
         el(
           "span",
           "boost-chip frenzy",
-          `⚡ ship frenzy · ${Math.ceil(state.boosts.frenzyRemaining)}s`,
+          `⚡ ship frenzy · ${gameDays(state.boosts.frenzyRemaining)}`,
         ),
       );
     }
+    if (state.founder !== null) {
+      founderLine.textContent = `You own ${Math.round(state.equity * 100)}% · worth ${money(founderNetWorth(state))}`;
+    }
 
-    shipAmount.textContent = `+${money(clickPower(state))}`;
+    const tokens = tokensPerSec(state);
+    if (tokens > 0) {
+      boostChips.append(el("span", "boost-chip tokens", `🪙 ${formatNumber(tokens)} tokens/day`));
+    }
+
+    const quest = currentQuest(state);
+    questCard.classList.toggle("hidden", quest === null);
+    if (quest) {
+      questGoal.textContent = quest.goal;
+      questReward.textContent = `+${money(quest.reward)}`;
+    }
+    vignette.classList.toggle("hidden", !(showRunway && runway < 45));
 
     ageChip.textContent = companyAgeLabel(state);
     roundBadge.textContent = `${roundName(state.rounds)} stage`;
@@ -567,13 +886,32 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
       lastFounderSeed = state.founder;
       renderAvatar(founderFace, state.founder);
     }
+    if (state.companyName) {
+      brandName.textContent = state.companyName;
+      founderFace.title = state.founderName;
+    }
     if (state.team.length !== lastTeamLen) {
       lastTeamLen = state.team.length;
       facesStrip.textContent = "";
-      for (const seed of state.team.slice(-10)) {
+      for (const mate of state.team.slice(-8)) {
         const face = el("span", "strip-face");
-        renderAvatar(face, seed);
+        face.title = mate.n;
+        renderAvatar(face, mate.s);
         facesStrip.append(face);
+      }
+      if (state.team.length > 0) {
+        facesStrip.append(el("span", "strip-more", "squad ▸"));
+      }
+      // refresh each role's mini-crew
+      for (const [roleId, row] of genRows) {
+        row.faces.textContent = "";
+        const mates = state.team.filter((m) => m.r === roleId).slice(-3);
+        for (const mate of mates) {
+          const face = el("span", "row-face");
+          face.title = mate.n;
+          renderAvatar(face, mate.s);
+          row.faces.append(face);
+        }
       }
     }
 
@@ -598,16 +936,50 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
         row.cost.textContent = money(cost);
         row.root.classList.toggle("hired", count > 0);
         if (def.baseRate > 0) {
-          row.meta.textContent = `${money(generatorUnitRate(state, def))}/s · ${money(def.salary)}/s pay`;
+          row.meta.textContent = `${money(generatorUnitRate(state, def))}/day · ${money(def.salary)}/day pay`;
+        } else if (def.id === "eng-manager") {
+          row.meta.textContent = `auto-ships for you · ${money(def.salary)}/day pay`;
         } else {
-          row.meta.textContent = `${dept.short} · ${money(def.salary)}/s pay`;
+          row.meta.textContent = `${dept.short} · ${money(def.salary)}/day pay`;
         }
-        const affordable = state.cash >= cost;
+        const full = roleFull(state, def);
+        if (full) {
+          row.cost.textContent = "hired ✓";
+          row.meta.textContent = `${dept.short} · ${money(def.salary)}/day pay`;
+        }
+        const affordable = !full && state.cash >= cost;
         row.root.classList.toggle("affordable", affordable);
-        row.root.disabled = !affordable;
+        row.root.classList.toggle("full", full);
+        row.root.disabled = !affordable && !full;
       }
       const box = deptBoxes.get(dept.id);
       box?.head.classList.toggle("hidden", !anyVisible);
+
+      // live tile: headcount + what this department is doing for you
+      const tile = deptTiles.get(dept.id);
+      if (tile) {
+        let members = 0;
+        for (const def of GENERATORS) if (def.dept === dept.id) members += owned(state, def.id);
+        tile.count.textContent = String(members);
+        let valueText = "—";
+        if (members === 0 && dept.id !== "eng") {
+          // no hires yet: no effect to show
+        } else if (dept.id === "eng") {
+          let sum = 0;
+          for (const def of GENERATORS) {
+            if (def.dept === "eng") sum += owned(state, def.id) * generatorUnitRate(state, def);
+          }
+          valueText = `$${formatNumber(sum)}/day`;
+        } else if (dept.id === "product") valueText = `×${engMult(state).toFixed(2)} eng`;
+        else if (dept.id === "gtm") valueText = `×${gtmClickMult(state).toFixed(2)} ship`;
+        else if (dept.id === "people")
+          valueText = `−${Math.round((1 - hireDiscount(state)) * 100)}% hires`;
+        else if (dept.id === "finance")
+          valueText = `−${Math.round((1 - financeBurnMult(state)) * 100)}% burn`;
+        else if (dept.id === "legal")
+          valueText = `+${Math.round((roundJump(state) - 1) * 100)}%/round`;
+        tile.value.textContent = valueText;
+      }
     }
 
     // upgrades
@@ -626,7 +998,7 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
     // actions
     const adCost = campaignCost(state);
     if (state.boosts.adCooldown > 0) {
-      adMeta.textContent = `ready in ${Math.ceil(state.boosts.adCooldown)}s`;
+      adMeta.textContent = `ready in ${gameDays(state.boosts.adCooldown)}`;
       adBtn.disabled = true;
     } else {
       adMeta.textContent = `${money(adCost)} · roll the dice`;
@@ -641,7 +1013,7 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
       labBar.classList.remove("hidden");
       labFill.style.width = `${Math.min(100, (state.research.progress / running.seconds) * 100)}%`;
     } else if (next) {
-      labMeta.textContent = `${next.name} · ${money(next.cost)} · ${formatDuration(next.seconds)}`;
+      labMeta.textContent = `${next.name} · ${money(next.cost)} · ${gameDays(next.seconds)}`;
       labBtn.disabled = state.cash < next.cost;
       labBar.classList.add("hidden");
     } else {
@@ -654,7 +1026,7 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
     const gain = raiseGain(state);
     const nextName = nextRoundName(state.rounds);
     if (gain >= 1) {
-      fundStatus.textContent = `Raise your ${nextName}: +◆ ${formatNumber(gain)}, +${money(gain * INJECTION_PER_POINT)} cash — and salaries jump 25%.`;
+      fundStatus.textContent = `Raise your ${nextName}: +◆ ${formatNumber(gain)} and +${money(gain * INJECTION_PER_POINT)} cash. Costs 15% of your equity — and salaries jump.`;
       fundBtn.textContent = `Raise ${nextName} 🎉`;
       fundBtn.disabled = false;
       fundFill.style.width = "100%";
@@ -671,10 +1043,10 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
   return {
     render,
     toast,
-    spawnCash,
     celebrate,
     showCrash,
     showFounderPicker,
+    showDecision,
     spawnLuckBubble,
     removeLuckBubble,
     setPaused,

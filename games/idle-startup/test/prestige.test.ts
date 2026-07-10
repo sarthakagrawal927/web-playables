@@ -39,6 +39,7 @@ describe("funding rounds (raise until you crash)", () => {
     expect(state.rounds).toBe(1);
     expect(state.cash).toBeCloseTo(STARTING_CASH + 2 * 2_500_000);
     expect(state.generators.intern).toBe(5); // the company keeps running
+    expect(state.equity).toBeCloseTo(0.85); // diluted 15%
     expect(raiseRound(state)).toBe(0); // nothing new to bank
   });
 
@@ -46,14 +47,15 @@ describe("funding rounds (raise until you crash)", () => {
     const state = initialState();
     state.generators = { intern: 10 };
     state.cash = 1_000_000;
+    state.questIndex = 999; // keep quest rewards out of the payroll math
     const before = state.cash;
     tick(state, 1);
-    const drainAt0 = before + 50 - 10 - state.cash; // sanity: net +40
+    const drainAt0 = before + 50 - 20 - state.cash; // sanity: net +30
 
     state.rounds = 3;
     const cash2 = state.cash;
     tick(state, 1);
-    expect(state.cash - cash2).toBeCloseTo(50 - 10 * 1.25 ** 3);
+    expect(state.cash - cash2).toBeCloseTo(50 - 20 * 1.25 ** 3);
     expect(drainAt0).toBeCloseTo(0);
   });
 
@@ -70,7 +72,7 @@ describe("funding rounds (raise until you crash)", () => {
     state.research.current = "v2";
     state.research.progress = 100;
     state.ageSeconds = 900;
-    recordHire(state, 123);
+    recordHire(state, 123, "Maya K.", "intern", "shipper");
 
     doCrash(state);
     expect(state.crashes).toBe(1);
@@ -83,14 +85,16 @@ describe("funding rounds (raise until you crash)", () => {
     expect(state.rounds).toBe(0);
     expect(state.raisedThisRun).toBe(0);
     expect(state.team).toEqual([]);
+    expect(state.roleMods).toEqual({});
+    expect(state.equity).toBe(1);
     expect(state.ageSeconds).toBe(0);
     expect(state.research.current).toBeNull();
   });
 
-  it("team faces are recorded in hire order with a display cap", () => {
+  it("team members are recorded in hire order with a display cap", () => {
     const state = initialState();
-    for (let i = 0; i < 30; i++) recordHire(state, i);
-    expect(state.team.length).toBe(24);
-    expect(state.team[23]).toBe(29);
+    for (let i = 0; i < 60; i++) recordHire(state, i, `P${i}`, "intern");
+    expect(state.team.length).toBe(48);
+    expect(state.team[47]).toEqual({ s: 59, n: "P59", r: "intern", t: "steady" });
   });
 });
