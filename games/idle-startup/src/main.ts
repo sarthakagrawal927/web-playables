@@ -12,7 +12,7 @@ import {
 } from "@games/gamekit";
 import { nextRoundName } from "./content";
 import * as sim from "./sim";
-import { initialState, migrations, SAVE_VERSION, type GameState } from "./state";
+import { type GameState, initialState, migrations, SAVE_VERSION } from "./state";
 import { createUI } from "./ui";
 
 // Boot order matters for YT certification: platform → load (before any save)

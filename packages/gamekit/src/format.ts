@@ -5,9 +5,7 @@ function suffixFor(tier: number): string {
   if (named !== undefined) return named;
   // Past T: aa, ab, … az, ba, … (idle-game convention).
   const i = tier - NAMED_SUFFIXES.length;
-  return (
-    String.fromCharCode(97 + Math.floor(i / 26)) + String.fromCharCode(97 + (i % 26))
-  );
+  return String.fromCharCode(97 + Math.floor(i / 26)) + String.fromCharCode(97 + (i % 26));
 }
 
 function trim(value: number, decimals: number): string {

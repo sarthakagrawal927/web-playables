@@ -47,7 +47,21 @@ leaderboards/backend, monetization, accounts.
 
 ## Features (shipped)
 
-- (filled in as v1 lands — see repo README)
+- gamekit framework: Platform adapter (WebPlatform/YtPlatform + factory),
+  fixed-timestep loop with background watchdog, versioned save manager with
+  migrations + 64 KiB guard, capped offline progress, K/M/B/T…aa number
+  formatting, typed emitter — 16 unit tests
+- idle-startup game: 8 generators, 12 upgrades, funding-round prestige
+  (investor points, +2%/point), offline earnings toast, click particles,
+  count-up ticker, celebration moment, pause veil — 16 unit tests
+- Dual build: web (`dist/web`, no SDK) + YT Playables (`dist/yt` with SDK
+  script first, zipped with index.html at root, ~147 KB vs 30 MB limit)
+- Verified: zero external requests (fonts bundled via @fontsource), save
+  persists across reload, layouts hold at 9:16 / 1:1 / 16:9 in real iframes
+  (embed-test.html + Playwright screenshots)
+- Hub arcade site (`apps/hub`, built by Codex, reviewed): game registry,
+  card grid, `/play/<id>/` routes assembled by `scripts/assemble-site.mjs`
+- CI: pnpm + `pnpm check` (biome, typecheck, vitest ×32, builds, assembly)
 
 ## Todo / Planned / Deferred / Blocked
 

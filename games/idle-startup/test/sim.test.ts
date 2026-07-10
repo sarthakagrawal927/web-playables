@@ -11,7 +11,7 @@ import {
   shipClick,
   tick,
 } from "../src/sim";
-import { initialState, type GameState } from "../src/state";
+import { type GameState, initialState } from "../src/state";
 
 const intern = GENERATORS[0];
 if (!intern) throw new Error("content missing");

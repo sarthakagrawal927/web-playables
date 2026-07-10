@@ -3,13 +3,13 @@
 import {
   CLICK_BASE,
   GENERATORS,
+  type GeneratorDef,
+  generatorById,
   INVESTOR_BONUS,
   PRESTIGE_UNIT,
   UPGRADES,
-  generatorById,
-  upgradeById,
-  type GeneratorDef,
   type UpgradeDef,
+  upgradeById,
 } from "./content";
 import type { GameState } from "./state";
 

@@ -1,3 +1,4 @@
+/// <reference path="./ytgame.d.ts" />
 import type { Platform } from "./types";
 import { WebPlatform } from "./web";
 import { YtPlatform } from "./yt";

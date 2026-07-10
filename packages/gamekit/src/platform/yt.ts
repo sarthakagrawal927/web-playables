@@ -1,3 +1,4 @@
+/// <reference path="./ytgame.d.ts" />
 import type { Platform, Unsubscribe } from "./types";
 
 /**
