@@ -2,7 +2,13 @@ import "@fontsource-variable/space-grotesk";
 import "@fontsource-variable/jetbrains-mono";
 import "./style.css";
 
+import { drawCover } from "./cover";
 import { GAMES, type GameMeta } from "./games";
+
+const COVER_HUES: Record<string, number> = {
+  "idle-startup": 150,
+  "coming-soon": 258,
+};
 
 function addText(parent: HTMLElement, className: string, text: string) {
   const element = document.createElement("span");
@@ -20,7 +26,19 @@ function createCard(game: GameMeta) {
     card.setAttribute("aria-label", `Play ${game.title}`);
   }
 
-  addText(card, "game-card__emoji", game.emoji);
+  const art = document.createElement("div");
+  art.className = "game-card__art";
+  const cover = document.createElement("canvas");
+  cover.className = "game-card__cover";
+  cover.setAttribute("aria-hidden", "true");
+  drawCover(cover, {
+    hue: COVER_HUES[game.id] ?? 210,
+    muted: game.status === "soon",
+    seed: game.id.length * 31,
+  });
+  art.append(cover);
+  addText(art, "game-card__emoji", game.emoji);
+  card.append(art);
 
   const body = document.createElement("div");
   body.className = "game-card__body";

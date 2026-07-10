@@ -68,11 +68,31 @@ button:focus-visible {
   position: fixed;
   inset: 0;
   pointer-events: none;
+  overflow: hidden;
   background:
-    radial-gradient(60% 45% at 12% -5%, rgba(160, 139, 255, 0.13), transparent 70%),
-    radial-gradient(55% 40% at 95% 105%, rgba(62, 224, 137, 0.09), transparent 70%),
     repeating-linear-gradient(0deg, rgba(105, 120, 190, 0.055) 0 1px, transparent 1px 44px),
     repeating-linear-gradient(90deg, rgba(105, 120, 190, 0.055) 0 1px, transparent 1px 44px);
+}
+
+/* ambient glows drift slowly — the room feels alive, not static */
+.backdrop::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(38% 30% at 18% 8%, rgba(160, 139, 255, 0.16), transparent 70%),
+    radial-gradient(34% 28% at 88% 92%, rgba(62, 224, 137, 0.12), transparent 70%),
+    radial-gradient(26% 22% at 75% 15%, rgba(94, 168, 255, 0.08), transparent 70%);
+  animation: drift 26s ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+  from {
+    transform: translate(-2%, -1%) scale(1);
+  }
+  to {
+    transform: translate(2%, 2%) scale(1.06);
+  }
 }
 
 /* ---- frame & layout ---- */
@@ -193,7 +213,17 @@ button:focus-visible {
   margin-top: 6px;
 }
 
+/* the live revenue ticker under the balance */
+.revenue-chart {
+  display: block;
+  width: 100%;
+  height: 64px;
+  margin-top: 12px;
+}
+
 .ship-btn {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -205,12 +235,47 @@ button:focus-visible {
   box-shadow:
     0 6px 24px rgba(62, 224, 137, 0.28),
     inset 0 1px 0 rgba(255, 255, 255, 0.35);
-  transition: transform 80ms ease;
+  transition:
+    transform 80ms ease,
+    box-shadow 150ms ease;
   user-select: none;
 }
 
+.ship-btn:hover {
+  box-shadow:
+    0 8px 34px rgba(62, 224, 137, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
 .ship-btn:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
+}
+
+/* periodic sheen sweep — the button asks to be pressed */
+.ship-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 32%,
+    rgba(255, 255, 255, 0.38) 47%,
+    transparent 62%
+  );
+  transform: translateX(-130%);
+  animation: sheen 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes sheen {
+  0%,
+  70% {
+    transform: translateX(-130%);
+  }
+  90%,
+  100% {
+    transform: translateX(130%);
+  }
 }
 
 .ship-label {
@@ -327,18 +392,31 @@ button:focus-visible {
 }
 
 .gen-row.affordable {
-  border-color: color-mix(in srgb, var(--cash) 40%, var(--line));
+  border-color: hsl(var(--medal-h) 70% 55% / 0.5);
+  box-shadow: 0 0 18px hsl(var(--medal-h) 80% 50% / 0.12);
 }
 
 .gen-row.affordable:hover {
-  border-color: var(--cash);
-  background: color-mix(in srgb, var(--cash) 6%, var(--ink-700));
+  border-color: hsl(var(--medal-h) 75% 62%);
+  background: hsl(var(--medal-h) 70% 55% / 0.08);
+  transform: translateY(-1px);
 }
 
-.gen-emoji {
-  font-size: 1.5rem;
-  width: 2rem;
-  text-align: center;
+/* each hire gets a colored medallion — the character art of this game */
+.gen-medal {
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  font-size: 1.45rem;
+  background:
+    radial-gradient(120% 120% at 22% 15%, hsl(var(--medal-h) 82% 72% / 0.5), transparent 55%),
+    linear-gradient(150deg, hsl(var(--medal-h) 70% 32% / 0.95), hsl(var(--medal-h) 75% 15%));
+  border: 1px solid hsl(var(--medal-h) 70% 58% / 0.55);
+  box-shadow:
+    inset 0 1px 0 hsl(var(--medal-h) 85% 82% / 0.3),
+    0 4px 14px hsl(var(--medal-h) 80% 45% / 0.28);
 }
 
 .gen-body {
@@ -440,6 +518,20 @@ button:focus-visible {
   font-size: 0.72rem;
   color: var(--text-faint);
   line-height: 1.35;
+}
+
+.upg-chip {
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: hsl(var(--chip-h, 258) 75% 70%);
+  border: 1px solid hsl(var(--chip-h, 258) 70% 60% / 0.4);
+  background: hsl(var(--chip-h, 258) 70% 60% / 0.12);
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-top: 2px;
 }
 
 .upg-cost {
@@ -566,4 +658,11 @@ body.paused .frame {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* pause halts every ambient animation too (YT cert: pause ALL execution) */
+body.paused *,
+body.paused *::before,
+body.paused *::after {
+  animation-play-state: paused !important;
 }

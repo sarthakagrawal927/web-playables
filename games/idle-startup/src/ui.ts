@@ -1,5 +1,6 @@
 import { formatNumber } from "@games/gamekit";
-import { GENERATORS, nextRoundName, roundName, type UpgradeDef } from "./content";
+import { createRevenueChart } from "./chart";
+import { GENERATORS, generatorById, nextRoundName, roundName, type UpgradeDef } from "./content";
 import {
   availableUpgrades,
   clickPower,
@@ -29,6 +30,14 @@ export interface UI {
 }
 
 const money = (n: number) => `$${formatNumber(n)}`;
+
+/** Per-tier medallion hue ramp: mint → teal → blue → violet → magenta → gold. */
+const MEDAL_HUES = [150, 172, 200, 228, 258, 285, 320, 42];
+
+function medalHue(generatorId: string): number {
+  const index = GENERATORS.findIndex((g) => g.id === generatorId);
+  return MEDAL_HUES[index] ?? MEDAL_HUES[0] ?? 150;
+}
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -67,7 +76,10 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
   const cashCard = el("div", "card cash-card");
   const cashValue = el("div", "cash-value", "$0");
   const cashRate = el("div", "cash-rate", "$0/s revenue");
-  cashCard.append(el("div", "eyebrow", "Company balance"), cashValue, cashRate);
+  const chartCanvas = el("canvas", "revenue-chart");
+  chartCanvas.setAttribute("aria-hidden", "true");
+  const chart = createRevenueChart(chartCanvas);
+  cashCard.append(el("div", "eyebrow", "Company balance"), cashValue, cashRate, chartCanvas);
 
   const shipBtn = el("button", "ship-btn");
   const shipAmount = el("span", "ship-amount", "+$1");
@@ -117,7 +129,8 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
   for (const def of GENERATORS) {
     const root = el("button", "gen-row hidden");
     root.type = "button";
-    const emoji = el("span", "gen-emoji", def.emoji);
+    root.style.setProperty("--medal-h", String(medalHue(def.id)));
+    const emoji = el("span", "gen-medal", def.emoji);
     emoji.setAttribute("aria-hidden", "true");
     const body = el("div", "gen-body");
     const nameLine = el("div", "gen-name", def.name);
@@ -143,9 +156,21 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
     for (const def of defs) {
       const card = el("button", "upg-card");
       card.type = "button";
+      const chip = el("span", "upg-chip");
+      if (def.target === "click") {
+        chip.textContent = "per ship";
+        chip.style.setProperty("--chip-h", "150");
+      } else if (def.target === "all") {
+        chip.textContent = "everything";
+        chip.style.setProperty("--chip-h", "258");
+      } else {
+        chip.textContent = generatorById(def.target)?.name.toLowerCase() ?? def.target;
+        chip.style.setProperty("--chip-h", String(medalHue(def.target)));
+      }
       card.append(
         el("div", "upg-name", def.name),
         el("div", "upg-flavor", def.flavor),
+        chip,
         el("div", "upg-cost", money(def.cost)),
       );
       card.addEventListener("click", () => hooks.onBuyUpgrade(def.id));
@@ -232,13 +257,20 @@ export function createUI(app: HTMLElement, hooks: UIHooks): UI {
 
   // ---- per-tick patch render ---------------------------------------------
   let displayCash = 0;
+  let renderCount = 0;
   const render = (state: GameState) => {
     // Count-up: ease the displayed balance toward the true balance.
     displayCash = reducedMotion ? state.cash : displayCash + (state.cash - displayCash) * 0.35;
     if (Math.abs(displayCash - state.cash) < 0.5) displayCash = state.cash;
     cashValue.textContent = money(displayCash);
-    cashRate.textContent = `${money(productionPerSec(state))}/s revenue`;
+    const perSec = productionPerSec(state);
+    cashRate.textContent = `${money(perSec)}/s revenue`;
     shipAmount.textContent = `+${money(clickPower(state))}`;
+
+    // ~2.5 samples/sec: the ticker scrolls at a stock-chart pace. Driven by
+    // the render tick, so it freezes on pause like everything else.
+    renderCount += 1;
+    if (renderCount % 4 === 1) chart.push(perSec);
 
     roundBadge.textContent = `${roundName(state.rounds)} stage`;
     investorsChip.classList.toggle("hidden", state.investors === 0);
