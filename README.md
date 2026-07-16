@@ -1,4 +1,4 @@
-# games
+# Web Playables
 
 HTML5 games hub — a tiny framework (`gamekit`) + games built on it, playable on
 the web, embeddable anywhere, and packaged to [YouTube Playables](https://developers.google.com/youtube/gaming/playables)

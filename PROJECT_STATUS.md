@@ -1,10 +1,10 @@
-# games — PROJECT STATUS
+# Web Playables — PROJECT STATUS
 
 Last updated: 2026-07-10 (v2)
 
 ## Why / What
 
-HTML5 games hub: a small reusable framework (`gamekit`) plus games built on it,
+Web Playables is an HTML5 games hub: a small reusable framework (`gamekit`) plus games built on it,
 starting with an idle startup-simulator. Games run embedded on ordinary websites
 (iframe / static hosting) and are packaged to YouTube Playables certification
 spec so they are submission-ready the moment Playables access (invite-gated)
