@@ -1,6 +1,6 @@
 # Web Playables — PROJECT STATUS
 
-Last updated: 2026-07-10 (v2)
+Last updated: 2026-07-17 (v2)
 
 ## Why / What
 
@@ -35,6 +35,7 @@ leaderboards/backend, monetization, accounts.
 
 ## Timeline
 
+- 2026-07-17 — Deployed the hub and Idle Startup game to Cloudflare Pages at `https://startup.aliveville.com`.
 - 2026-07-10 — project scaffolded; gamekit + idle-startup + hub v1 built
 
 ## Products
@@ -43,7 +44,7 @@ leaderboards/backend, monetization, accounts.
 - `@games/idle-startup` — first game; web build (`dist/web`) + YT zip
   (`pnpm build:yt`)
 - `@games/hub` — arcade site; `pnpm build` assembles hub with games under
-  `/play/<id>/` (single Pages surface, not yet deployed)
+  `/play/<id>/` on the `startup.aliveville.com` Pages surface
 
 ## Features (shipped)
 
@@ -75,9 +76,8 @@ leaderboards/backend, monetization, accounts.
 
 ## Todo / Planned / Deferred / Blocked
 
-1. Deploy hub + game to Cloudflare Pages (manual, on request)
-2. Playtest balance pass on idle-startup content curve
-3. **Blocked**: YouTube Playables submission — requires invite/onboarded
+1. Playtest balance pass on idle-startup content curve
+2. **Blocked**: YouTube Playables submission — requires invite/onboarded
    channel (Private Preview); zip bundle is kept submission-ready
-4. Deferred: sound design (audio gate already wired via platform adapter)
-5. Deferred: break_eternity.js if a game's numbers approach 1e15
+3. Deferred: sound design (audio gate already wired via platform adapter)
+4. Deferred: break_eternity.js if a game's numbers approach 1e15
