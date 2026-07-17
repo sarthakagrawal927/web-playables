@@ -102,4 +102,4 @@ grid.setAttribute("aria-label", "Games");
 grid.append(...GAMES.map(createCard));
 main.append(grid);
 
-app.append(backdrop, main);
+app.replaceChildren(backdrop, main);
