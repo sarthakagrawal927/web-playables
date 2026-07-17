@@ -35,7 +35,7 @@ leaderboards/backend, monetization, accounts.
 
 ## Timeline
 
-- 2026-07-17 — Deployed the hub and Idle Startup game to Cloudflare Pages at `https://startup.aliveville.com`.
+- 2026-07-17 — Deployed the hub and Idle Startup game to Cloudflare Pages at `https://idle.aliveville.com`.
 - 2026-07-10 — project scaffolded; gamekit + idle-startup + hub v1 built
 
 ## Products
@@ -44,7 +44,7 @@ leaderboards/backend, monetization, accounts.
 - `@games/idle-startup` — first game; web build (`dist/web`) + YT zip
   (`pnpm build:yt`)
 - `@games/hub` — arcade site; `pnpm build` assembles hub with games under
-  `/play/<id>/` on the `startup.aliveville.com` Pages surface
+  `/play/<id>/` on the `idle.aliveville.com` Pages surface
 
 ## Features (shipped)
 

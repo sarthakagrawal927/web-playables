@@ -4,7 +4,7 @@ HTML5 games hub — a tiny framework (`gamekit`) + games built on it, playable o
 the web, embeddable anywhere, and packaged to [YouTube Playables](https://developers.google.com/youtube/gaming/playables)
 certification spec.
 
-Live arcade: <https://startup.aliveville.com>
+Live arcade: <https://idle.aliveville.com>
 
 ## Layout
 
