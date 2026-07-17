@@ -86,12 +86,13 @@ main.className = "frame";
 
 const header = document.createElement("header");
 const wordmark = document.createElement("h1");
-wordmark.textContent = "games.";
+wordmark.textContent = "idle.";
 header.append(wordmark);
 
 const intro = document.createElement("p");
 intro.className = "intro";
-intro.textContent = "Pick a game and start playing.";
+intro.textContent =
+  "A small directory of browser-playable games and experiments. Pick one and start playing.";
 header.append(intro);
 main.append(header);
 
