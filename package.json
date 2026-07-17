@@ -12,6 +12,7 @@
     "build": "pnpm -r build && node scripts/assemble-site.mjs",
     "build:yt": "pnpm --filter @games/idle-startup build:yt",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "deploy": "pnpm build && wrangler pages deploy apps/hub/dist --project-name=web-playables --branch=main",
     "preview": "pnpm --filter @games/idle-startup preview"
   },
   "devDependencies": {
