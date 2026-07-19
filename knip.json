@@ -34,10 +34,5 @@
     "tsx",
     "knip"
   ],
-  "ignoreBinaries": [
-    "vite",
-    "wrangler",
-    "biome",
-    "knip"
-  ]
+  "ignoreBinaries": ["vite", "wrangler", "biome", "knip"]
 }
