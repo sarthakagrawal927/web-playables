@@ -2,7 +2,7 @@ import type { Migration } from "@games/gamekit";
 
 export const SAVE_VERSION = 3;
 
-export interface ResearchState {
+interface ResearchState {
   /** research id in progress, or null */
   current: string | null;
   /** seconds of progress on `current` */
@@ -11,7 +11,7 @@ export interface ResearchState {
   done: string[];
 }
 
-export interface TeamMate {
+interface TeamMate {
   /** avatar seed */
   s: number;
   /** chosen name */
@@ -22,7 +22,7 @@ export interface TeamMate {
   t: string;
 }
 
-export interface BoostState {
+interface BoostState {
   /** quarterly-decision modifiers (1 = none) and remaining days */
   decisionRev: number;
   decisionBurn: number;
@@ -79,7 +79,7 @@ export interface GameState {
   officeIndex: number;
 }
 
-export function initialBoosts(): BoostState {
+function initialBoosts(): BoostState {
   return {
     adMult: 1,
     adRemaining: 0,

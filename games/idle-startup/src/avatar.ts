@@ -32,7 +32,7 @@ function pick<T>(rand: () => number, arr: T[]): T {
 }
 
 /** SVG markup for a 64×64 cartoon face. Same seed → same face, forever. */
-export function avatarSvg(seed: number): string {
+function avatarSvg(seed: number): string {
   const rand = mulberry32(seed);
   const skin = pick(rand, SKIN);
   const hair = pick(rand, HAIR);

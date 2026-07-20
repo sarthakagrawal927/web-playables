@@ -58,7 +58,7 @@ import zap from "./sprites/zap.png";
 import zen from "./sprites/zen.png";
 
 /** emoji character → bundled sprite URL */
-export const SPRITES: Record<string, string> = {
+const SPRITES: Record<string, string> = {
   "🎈": balloon,
   "📈": chart_up,
   "🎲": die,

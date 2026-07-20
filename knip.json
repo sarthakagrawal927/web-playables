@@ -1,0 +1,38 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "project": ["**/*.{ts,tsx,js,jsx,mjs,cjs,mts}"],
+  "ignore": [
+    "**/dist/**",
+    "**/build/**",
+    "**/node_modules/**",
+    "**/coverage/**",
+    "**/public/**",
+    "**/*.config.{js,ts,mjs,cjs}",
+    "scripts/**",
+    "**/*.test.{ts,tsx,js,mjs}",
+    "**/*.spec.{ts,tsx,js,mjs}",
+    "**/*.d.mts",
+    "**/*.d.ts"
+  ],
+  "ignoreDependencies": [
+    "typescript",
+    "@types/*",
+    "biome",
+    "@biomejs/biome",
+    "prettier",
+    "prettier-plugin-tailwindcss",
+    "husky",
+    "lint-staged",
+    "vitest",
+    "@vitest/*",
+    "playwright",
+    "@playwright/test",
+    "wrangler",
+    "tailwindcss",
+    "@tailwindcss/*",
+    "lightningcss",
+    "tsx",
+    "knip"
+  ],
+  "ignoreBinaries": ["vite", "wrangler", "biome", "knip"]
+}

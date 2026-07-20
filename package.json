@@ -13,9 +13,12 @@
     "build:yt": "pnpm --filter @games/idle-startup build:yt",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "deploy": "pnpm build && wrangler pages deploy apps/hub/dist --project-name=web-playables --branch=main",
-    "preview": "pnpm --filter @games/idle-startup preview"
+    "preview": "pnpm --filter @games/idle-startup preview",
+    "knip": "knip --no-exit-code --reporter symbols",
+    "knip:strict": "knip --reporter symbols"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.11"
+    "@biomejs/biome": "^2.3.11",
+    "knip": "^6.6.3"
   }
 }

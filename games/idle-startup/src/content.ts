@@ -28,7 +28,7 @@ export interface GeneratorDef {
   max?: number;
 }
 
-export type UpgradeTarget = "click" | "all" | (string & {});
+type UpgradeTarget = "click" | "all" | (string & {});
 
 export interface UpgradeDef {
   id: string;
@@ -118,11 +118,7 @@ export const DEPTS: DeptDef[] = [
   },
 ];
 
-export function deptById(id: DeptId): DeptDef {
-  return DEPTS.find((d) => d.id === id) ?? (DEPTS[0] as DeptDef);
-}
-
-export const ROUND_NAMES = [
+const ROUND_NAMES = [
   "Bootstrapped",
   "Pre-seed",
   "Seed",
@@ -613,7 +609,7 @@ export interface MilestoneDef {
 }
 
 /** The slice of GameState milestones read (kept minimal for testability). */
-export interface MilestoneView {
+interface MilestoneView {
   totalEarned: number;
   generators: Record<string, number>;
   campaignsRun: number;
@@ -729,7 +725,7 @@ export const MANAGER_SHIPS_PER_SEC = 0.5;
 export const TOKENS_PER_COPILOT_PER_SEC = 250_000;
 
 // ---- quest chain: the "what do I do next" engine.
-export interface QuestView extends MilestoneView {
+interface QuestView extends MilestoneView {
   clicks: number;
   research: { current: string | null; done: string[] };
   officeIndex: number;
@@ -879,7 +875,7 @@ export interface TraitDef {
   blurb: string;
 }
 
-export const TRAITS: TraitDef[] = [
+const TRAITS: TraitDef[] = [
   {
     id: "steady",
     name: "Steady",
@@ -943,7 +939,7 @@ export interface DecisionEffect {
   gamble?: { p: number; win: DecisionEffect; lose: DecisionEffect };
 }
 
-export interface DecisionOption {
+interface DecisionOption {
   label: string;
   desc: string;
   effect: DecisionEffect;

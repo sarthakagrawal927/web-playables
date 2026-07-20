@@ -52,7 +52,7 @@ export function owned(state: GameState, generatorId: string): number {
   return state.generators[generatorId] ?? 0;
 }
 
-export function deptCount(state: GameState, dept: DeptId): number {
+function deptCount(state: GameState, dept: DeptId): number {
   let n = 0;
   for (const def of GENERATORS) if (def.dept === dept) n += owned(state, def.id);
   return n;
@@ -84,7 +84,7 @@ export function financeBurnMult(state: GameState): number {
 
 // ---- multipliers ----------------------------------------------------------
 
-export function prestigeMult(state: GameState): number {
+function prestigeMult(state: GameState): number {
   return 1 + INVESTOR_BONUS * state.investors;
 }
 
@@ -97,7 +97,7 @@ function upgradeMult(state: GameState, target: string): number {
   return mult;
 }
 
-export function researchMult(state: GameState): number {
+function researchMult(state: GameState): number {
   let mult = 1;
   for (const id of state.research.done) {
     const def = researchById(id);
@@ -132,7 +132,7 @@ export function nextOffice(state: GameState): OfficeDef | null {
 }
 
 /** Morale from the office multiplies all revenue. */
-export function moraleMult(state: GameState): number {
+function moraleMult(state: GameState): number {
   return currentOffice(state).morale;
 }
 
@@ -169,7 +169,7 @@ export function tokensPerSec(state: GameState): number {
 }
 
 /** Headcount in fractional units: count plus trait output bonuses. */
-export function effectiveUnits(state: GameState, generatorId: string): number {
+function effectiveUnits(state: GameState, generatorId: string): number {
   return owned(state, generatorId) + (state.roleMods[generatorId]?.rate ?? 0);
 }
 
@@ -189,7 +189,7 @@ export function roundJump(state: GameState): number {
 }
 
 /** Salary expectations compound with every round raised. */
-export function burnMult(state: GameState): number {
+function burnMult(state: GameState): number {
   return roundJump(state) ** state.rounds;
 }
 
@@ -256,7 +256,7 @@ function checkMilestones(state: GameState, gross: number, net: number): Mileston
 }
 
 /** One real second is one company day; 30 days make a month. */
-export const MONTH_SECONDS = 30;
+const MONTH_SECONDS = 30;
 
 /** Format a real-seconds span as company time: "12d", "2mo 4d", "1y 2mo". */
 export function gameDays(seconds: number): string {
@@ -387,7 +387,7 @@ export function currentQuest(state: GameState): QuestDef | null {
 
 // ---- transparency: every addition and multiplier, itemized -----------------
 
-export interface BreakdownLine {
+interface BreakdownLine {
   label: string;
   value: string;
 }
@@ -508,7 +508,7 @@ export function buyGenerator(state: GameState, generatorId: string): boolean {
   return true;
 }
 
-export function upgradeUnlocked(state: GameState, def: UpgradeDef): boolean {
+function upgradeUnlocked(state: GameState, def: UpgradeDef): boolean {
   const { generator, count, totalEarned } = def.unlock;
   if (generator !== undefined && owned(state, generator) < (count ?? 1)) return false;
   if (totalEarned !== undefined && state.totalEarned < totalEarned) return false;
@@ -548,11 +548,11 @@ export function generatorVisible(state: GameState, def: GeneratorDef): boolean {
 /** Cash each new investor point injects at a raise. */
 export const INJECTION_PER_POINT = 2_500_000;
 /** Ownership handed over at every round. */
-export const DILUTION_PER_ROUND = 0.15;
+const DILUTION_PER_ROUND = 0.15;
 /** Company value ≈ a year of revenue × the growth-story multiple. */
-export const VALUATION_MULTIPLE = 10;
+const VALUATION_MULTIPLE = 10;
 
-export function valuation(state: GameState): number {
+function valuation(state: GameState): number {
   return grossPerSec(state) * 365 * VALUATION_MULTIPLE;
 }
 
