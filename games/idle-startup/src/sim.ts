@@ -286,7 +286,8 @@ export function companyAgeLabel(state: GameState): string {
 export function tick(state: GameState, dtSeconds: number): TickEvents {
   const gross = grossPerSec(state);
   const burn = burnPerSec(state);
-  state.cash += (gross - burn) * dtSeconds;
+  const net = gross - burn;
+  state.cash += net * dtSeconds;
   state.totalEarned += gross * dtSeconds;
   state.ageSeconds += dtSeconds;
 
@@ -326,7 +327,7 @@ export function tick(state: GameState, dtSeconds: number): TickEvents {
   }
 
   const crashed = state.cash < 0;
-  const milestones = checkMilestones(state, gross, netPerSec(state));
+  const milestones = checkMilestones(state, gross, net);
 
   // quest chain: one active goal at a time; reward lands instantly
   let quest: QuestDef | null = null;

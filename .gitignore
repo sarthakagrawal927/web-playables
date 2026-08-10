@@ -3,5 +3,6 @@ dist/
 *.zip
 .env*
 .wrangler/
+.codevetter/performance-runs/
 .DS_Store
 *.log
