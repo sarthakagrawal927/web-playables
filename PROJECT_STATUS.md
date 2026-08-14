@@ -1,6 +1,6 @@
 # Web Playables — PROJECT STATUS
 
-Last updated: 2026-07-17 (v2)
+Last updated: 2026-08-15
 
 ## Why / What
 
@@ -35,6 +35,12 @@ leaderboards/backend, monetization, accounts.
 
 ## Timeline
 
+- 2026-08-15 — Published a complete two-URL sitemap and robots policy for the
+  retained Pages surface, added exact self-canonicals for the hub and game,
+  and verified both live URLs return direct 200 responses with exact canonical
+  metadata. Google Search Console accepted the sitemap with two discovered
+  pages. Cloudflare Pages deployed exact main revision
+  `87b411dfac987d54c762088bcb64188a29c35199` through its connected repository.
 - 2026-07-17 — Deployed the hub and Idle Startup game to Cloudflare Pages at `https://idle.aliveville.com`.
 - 2026-07-10 — project scaffolded; gamekit + idle-startup + hub v1 built
 
@@ -48,6 +54,8 @@ leaderboards/backend, monetization, accounts.
 
 ## Features (shipped)
 
+- Search discovery for both public routes through `robots.txt`, `sitemap.xml`,
+  and exact self-canonicals
 - idle-startup v2 "real company" update: five departments with distinct
   powers (eng revenue / product multiplies eng / GTM multiplies ships /
   people discounts hires / finance extends offline), salaries + burn +
@@ -74,10 +82,6 @@ leaderboards/backend, monetization, accounts.
   card grid, `/play/<id>/` routes assembled by `scripts/assemble-site.mjs`
 - CI: pnpm + `pnpm check` (biome, typecheck, vitest ×32, builds, assembly)
 
-## Todo / Planned / Deferred / Blocked
+## Work queue
 
-1. Playtest balance pass on idle-startup content curve
-2. **Blocked**: YouTube Playables submission — requires invite/onboarded
-   channel (Private Preview); zip bundle is kept submission-ready
-3. Deferred: sound design (audio gate already wired via platform adapter)
-4. Deferred: break_eternity.js if a game's numbers approach 1e15
+[GitHub Issues](https://github.com/sarthakagrawal927/web-playables/issues)
