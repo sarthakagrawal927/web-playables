@@ -18,3 +18,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run check
+      - name: Verify search discovery output
+        run: |
+          grep -Fq 'https://idle.aliveville.com/sitemap.xml' apps/hub/dist/robots.txt
+          grep -Fq 'https://idle.aliveville.com/play/idle-startup/' apps/hub/dist/sitemap.xml
+          grep -Fq 'rel="canonical" href="https://idle.aliveville.com/"' apps/hub/dist/index.html
+          grep -Fq 'rel="canonical" href="https://idle.aliveville.com/play/idle-startup/"' apps/hub/dist/play/idle-startup/index.html
