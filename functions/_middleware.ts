@@ -128,12 +128,33 @@ const OPENAPI_SPEC = {
         operationId: "getAgentCatalog",
         tags: ["agent-surfaces"],
         summary: "Agent catalog",
-        description: "JSON inventory of public agent surfaces: llms.txt, sitemap, and game directory entries.",
+        description:
+          "JSON inventory of public agent surfaces: llms.txt, sitemap, and game directory entries.",
         responses: {
-          "200": { description: "Agent catalog JSON", content: { "application/json": { schema: { $ref: "#/components/schemas/AgentCatalog" } } } },
-          "404": { description: "Unknown API path", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
-          "429": { description: "Rate limit exceeded", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
-          "500": { description: "Internal server error", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          "200": {
+            description: "Agent catalog JSON",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/AgentCatalog" } },
+            },
+          },
+          "404": {
+            description: "Unknown API path",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+            },
+          },
+          "429": {
+            description: "Rate limit exceeded",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+            },
+          },
+          "500": {
+            description: "Internal server error",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+            },
+          },
         },
       },
     },
@@ -144,8 +165,16 @@ const OPENAPI_SPEC = {
         summary: "llms.txt index",
         description: "Compact agent index following the llms.txt convention.",
         responses: {
-          "200": { description: "Markdown index", content: { "text/plain": { schema: { type: "string" } } } },
-          "429": { description: "Rate limit exceeded", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          "200": {
+            description: "Markdown index",
+            content: { "text/plain": { schema: { type: "string" } } },
+          },
+          "429": {
+            description: "Rate limit exceeded",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+            },
+          },
         },
       },
     },
@@ -156,8 +185,16 @@ const OPENAPI_SPEC = {
         summary: "Sitemap",
         description: "XML sitemap of all canonical public HTML pages.",
         responses: {
-          "200": { description: "XML sitemap", content: { "application/xml": { schema: { type: "string" } } } },
-          "429": { description: "Rate limit exceeded", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          "200": {
+            description: "XML sitemap",
+            content: { "application/xml": { schema: { type: "string" } } },
+          },
+          "429": {
+            description: "Rate limit exceeded",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+            },
+          },
         },
       },
     },
@@ -168,8 +205,16 @@ const OPENAPI_SPEC = {
         summary: "OpenAPI specification",
         description: "This document.",
         responses: {
-          "200": { description: "OpenAPI 3.1 spec", content: { "application/json": { schema: { type: "object" } } } },
-          "429": { description: "Rate limit exceeded", content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } } },
+          "200": {
+            description: "OpenAPI 3.1 spec",
+            content: { "application/json": { schema: { type: "object" } } },
+          },
+          "429": {
+            description: "Rate limit exceeded",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } },
+            },
+          },
         },
       },
     },
@@ -191,15 +236,14 @@ function withRateLimit(headers: Headers): Headers {
 }
 
 function jsonError(status: number, code: string, message: string, path: string): Response {
-  const headers = withRateLimit(new Headers({
-    "content-type": "application/json; charset=utf-8",
-    "cache-control": "no-store",
-    "access-control-allow-origin": "*",
-  }));
-  return new Response(
-    JSON.stringify({ error: { code, message, path } }),
-    { status, headers },
+  const headers = withRateLimit(
+    new Headers({
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store",
+      "access-control-allow-origin": "*",
+    }),
   );
+  return new Response(JSON.stringify({ error: { code, message, path } }), { status, headers });
 }
 
 function markdown404(pathname: string, origin: string): Response {
@@ -214,11 +258,13 @@ function markdown404(pathname: string, origin: string): Response {
 - [Agent catalog (JSON)](${origin}/api/ai)
 - [OpenAPI spec](${origin}/openapi.json)
 `;
-  const headers = withRateLimit(new Headers({
-    "content-type": "text/markdown; charset=utf-8",
-    "cache-control": "no-store",
-    "x-content-type-options": "nosniff",
-  }));
+  const headers = withRateLimit(
+    new Headers({
+      "content-type": "text/markdown; charset=utf-8",
+      "cache-control": "no-store",
+      "x-content-type-options": "nosniff",
+    }),
+  );
   return new Response(body, { status: 404, headers });
 }
 
@@ -242,36 +288,44 @@ export async function onRequest(context: {
 
   // Agent surfaces
   if (pathname === "/openapi.json") {
-    const headers = withRateLimit(new Headers({
-      "content-type": "application/json; charset=utf-8",
-      "access-control-allow-origin": "*",
-      "cache-control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
-    }));
+    const headers = withRateLimit(
+      new Headers({
+        "content-type": "application/json; charset=utf-8",
+        "access-control-allow-origin": "*",
+        "cache-control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+      }),
+    );
     return new Response(JSON.stringify(OPENAPI_SPEC, null, 2), { headers });
   }
 
   if (pathname === "/api/ai") {
-    const headers = withRateLimit(new Headers({
-      "content-type": "application/json; charset=utf-8",
-      "access-control-allow-origin": "*",
-      "cache-control": "public, max-age=300",
-    }));
+    const headers = withRateLimit(
+      new Headers({
+        "content-type": "application/json; charset=utf-8",
+        "access-control-allow-origin": "*",
+        "cache-control": "public, max-age=300",
+      }),
+    );
     return new Response(JSON.stringify(API_AI_CATALOG, null, 2) + "\n", { headers });
   }
 
   if (pathname === "/llms.txt") {
-    const headers = withRateLimit(new Headers({
-      "content-type": "text/plain; charset=utf-8",
-      "cache-control": "public, max-age=300",
-    }));
+    const headers = withRateLimit(
+      new Headers({
+        "content-type": "text/plain; charset=utf-8",
+        "cache-control": "public, max-age=300",
+      }),
+    );
     return new Response(LLMS_TXT, { headers });
   }
 
   if (pathname === "/sitemap.xml") {
-    const headers = withRateLimit(new Headers({
-      "content-type": "application/xml; charset=utf-8",
-      "cache-control": "public, max-age=300",
-    }));
+    const headers = withRateLimit(
+      new Headers({
+        "content-type": "application/xml; charset=utf-8",
+        "cache-control": "public, max-age=300",
+      }),
+    );
     return new Response(sitemapXml(origin), { headers });
   }
 
@@ -293,10 +347,18 @@ export async function onRequest(context: {
     const headers = withRateLimit(new Headers(response.headers));
     const vary = headers.get("vary");
     headers.set("vary", vary ? `${vary}, Accept, Accept-Encoding` : "Accept, Accept-Encoding");
-    return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
   }
 
   // Add rate-limit headers to all other responses.
   const headers = withRateLimit(new Headers(response.headers));
-  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 }
