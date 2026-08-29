@@ -1,0 +1,53 @@
+{
+  "$schema": "fleet.landing-audit.v1",
+  "project": "web-playables",
+  "priority": "P4",
+  "decision": "Hold",
+  "auditedAt": "2026-08-29",
+  "candidateUrl": "https://magazines-tommy-picks-pointed.trycloudflare.com/",
+  "productionUrl": "https://idle.aliveville.com/",
+  "releaseState": "Latest-source hub, retained game build, machine-readable discovery files, stable social image, and shared footer composition are qualified through a temporary Cloudflare tunnel. They are not deployed by this audit.",
+  "implementationAction": "preserve",
+  "migrationCandidate": false,
+  "gates": {
+    "contentPurpose": {
+      "score": 99,
+      "status": "pass",
+      "evidence": "The first viewport now identifies a completed and parked browser-game research lab, names Idle Startup as the retained playable result, and explains both web and YouTube Playables distribution. The false implied roadmap card was removed. A proof section explains the reusable gamekit, offline progress, versioned saves, pause behavior, adapters, and the exact condition for reopening the project."
+    },
+    "designQuality": {
+      "score": 94,
+      "status": "pass",
+      "evidence": "The existing dark arcade system remains clean, product-appropriate, and visually anchored by the Idle Startup cover. The revised single-game composition has stronger hierarchy and replaces placeholder inventory with a meaningful research-proof section. Exact 390 and 1440 pixel checks found zero overflow or runtime failures, one playable card, one project strip, and one Ask AI footer."
+    },
+    "seo": {
+      "score": 100,
+      "status": "pass",
+      "evidence": "The latest candidate passes all 15 checks with no warnings: exact title and description, canonical, complete Open Graph and Twitter metadata, a real image response at the stable social URL, CollectionPage and VideoGame JSON-LD, clean heading hierarchy, approximately 316 server-rendered words, and no broken internal links."
+    },
+    "geo": {
+      "score": 100,
+      "status": "pass",
+      "evidence": "Source now owns truthful llms.txt, llms-full.txt, homepage Markdown, per-game Markdown, robots policy, sitemap, and a valid /api/ai catalog. The latest full preview reports S-tier 100% in the Fleet agent-readiness audit."
+    },
+    "performance": {
+      "score": 95,
+      "status": "pass",
+      "evidence": "After removing nonessential webfont payload from the hub and preloading its exact LCP artwork, PSI Swarm completed 4/4 coverage profiles with weighted LCP 1.10 s, CLS 0, and TBT 0 ms. LCP measured 3.35 s on slow mobile, 1.42 s on mid mobile, 673 ms on fast mobile, and 419 ms on desktop; the only reported opportunity was temporary-tunnel response time on slow mobile."
+    }
+  },
+  "verification": {
+    "passed": [
+      "50/50 repository tests",
+      "workspace typecheck",
+      "Biome check with four pre-existing advisory warnings",
+      "hub and retained-game production builds",
+      "latest-candidate browser checks at 390 and 1440 pixels",
+      "latest-candidate SEO audit",
+      "latest-candidate GEO audit",
+      "latest-source PSI Swarm coverage profile",
+      "retained /play/idle-startup route and stable image responses"
+    ]
+  },
+  "minimumObserved": 94
+}
