@@ -1,0 +1,21 @@
+# Idle — Web Playables full brief
+
+Idle is a parked research project for learning how idle mechanics, reusable HTML5 game infrastructure, and portable game distribution work in practice.
+
+## Retained product
+
+Idle Startup is publicly playable without an account. The player ships features, hires a team, raises rounds, accumulates offline progress, and resumes through versioned local saves.
+
+## Reusable mechanism
+
+The shared gamekit owns the simulation loop, saves, offline progress, pause behavior, platform adapters, and build boundaries. Game code is isolated from host-specific APIs so one mechanic can ship as a normal browser game and as a submission-ready YouTube Playable package.
+
+## Current state and limits
+
+The research goal produced one live game, a reusable kit, and YouTube-compatible packaging. The project is now parked. There is no promised next game, active paid product, account system, or public roadmap.
+
+## Canonical surfaces
+
+- Project overview: https://idle.aliveville.com/
+- Markdown overview: https://idle.aliveville.com/index.md
+- Idle Startup: https://idle.aliveville.com/play/idle-startup/

@@ -1,11 +1,8 @@
-import "@fontsource-variable/space-grotesk";
-import "@fontsource-variable/jetbrains-mono";
 import "./style.css";
 
-import coverIdleStartup from "./assets/cover-idle-startup.jpg";
 import { drawCover } from "./cover";
 
-const COVER_ART: Record<string, string> = { "idle-startup": coverIdleStartup };
+const COVER_ART: Record<string, string> = { "idle-startup": "/og-card.jpg" };
 
 import { GAMES, type GameMeta } from "./games";
 
@@ -38,6 +35,9 @@ function createCard(game: GameMeta) {
     cover.className = "game-card__cover";
     cover.src = artUrl;
     cover.alt = "";
+    cover.fetchPriority = "high";
+    cover.width = 1200;
+    cover.height = 525;
     art.append(cover);
   } else {
     const cover = document.createElement("canvas");
@@ -85,6 +85,11 @@ const main = document.createElement("main");
 main.className = "frame";
 
 const header = document.createElement("header");
+const status = document.createElement("p");
+status.className = "status";
+status.textContent = "Research complete · parked";
+header.append(status);
+
 const wordmark = document.createElement("h1");
 wordmark.textContent = "idle.";
 header.append(wordmark);
@@ -92,7 +97,7 @@ header.append(wordmark);
 const intro = document.createElement("p");
 intro.className = "intro";
 intro.textContent =
-  "A small directory of browser-playable games and experiments. Pick one and start playing.";
+  "A browser-game lab built to learn idle mechanics and portable HTML5 distribution. The retained result is Idle Startup: playable here, packaged for the web and YouTube Playables.";
 header.append(intro);
 main.append(header);
 
@@ -101,5 +106,17 @@ grid.className = "game-grid";
 grid.setAttribute("aria-label", "Games");
 grid.append(...GAMES.map(createCard));
 main.append(grid);
+
+const proof = document.createElement("section");
+proof.className = "proof";
+proof.setAttribute("aria-labelledby", "proof-title");
+proof.innerHTML = `
+  <div>
+    <p class="proof__eyebrow">What the lab produced</p>
+    <h2 id="proof-title">One mechanic, two distribution targets.</h2>
+  </div>
+  <p class="proof__copy">The reusable gamekit owns the loop, versioned saves, offline progress, pause behavior, and platform adapters. The same game builds as a normal browser experience and as a submission-ready YouTube Playable. There is no promised next game; the project reopens only for a specific mechanic worth studying.</p>
+`;
+main.append(proof);
 
 app.replaceChildren(backdrop, main);

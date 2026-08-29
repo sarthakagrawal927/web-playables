@@ -14,11 +14,4 @@ export const GAMES: GameMeta[] = [
     emoji: "🚀",
     status: "live",
   },
-  {
-    id: "coming-soon",
-    title: "Next game",
-    tagline: "In the lab.",
-    emoji: "🧪",
-    status: "soon",
-  },
 ];

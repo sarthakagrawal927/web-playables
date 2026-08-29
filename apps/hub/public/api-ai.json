@@ -1,0 +1,27 @@
+{
+  "name": "Idle — Web Playables",
+  "version": "1",
+  "url": "https://idle.aliveville.com",
+  "llms": "https://idle.aliveville.com/llms.txt",
+  "llmsFull": "https://idle.aliveville.com/llms-full.txt",
+  "sitemap": "https://idle.aliveville.com/sitemap.xml",
+  "robots": "https://idle.aliveville.com/robots.txt",
+  "markdown": { "suffix": ".md", "negotiation": false },
+  "surfaces": [
+    {
+      "id": "home",
+      "url": "https://idle.aliveville.com/",
+      "md": "https://idle.aliveville.com/index.md",
+      "kind": "public",
+      "description": "Purpose, retained proof, and current parked state of the browser-game lab."
+    },
+    {
+      "id": "idle-startup",
+      "url": "https://idle.aliveville.com/play/idle-startup/",
+      "md": "https://idle.aliveville.com/play/idle-startup/index.md",
+      "kind": "product",
+      "description": "The retained browser-playable idle game, available without an account."
+    }
+  ],
+  "exclusions": ["local save contents", "private player state", "uncommitted future games"]
+}

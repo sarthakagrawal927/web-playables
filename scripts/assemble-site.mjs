@@ -4,11 +4,14 @@ import path from "node:path";
 const root = process.cwd();
 const gamesDir = path.join(root, "games");
 const hubDist = path.join(root, "apps", "hub", "dist");
+const hubCover = path.join(root, "apps", "hub", "src", "assets", "cover-idle-startup.jpg");
 
 if (!existsSync(hubDist)) {
   console.error("Hub build not found at apps/hub/dist. Build the hub before assembling the site.");
   process.exit(1);
 }
+
+cpSync(hubCover, path.join(hubDist, "og-card.jpg"));
 
 const playDir = path.join(hubDist, "play");
 mkdirSync(playDir, { recursive: true });
