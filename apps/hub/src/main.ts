@@ -115,7 +115,7 @@ proof.innerHTML = `
     <p class="proof__eyebrow">What the lab produced</p>
     <h2 id="proof-title">One mechanic, two distribution targets.</h2>
   </div>
-  <p class="proof__copy">The reusable gamekit owns the loop, versioned saves, offline progress, pause behavior, and platform adapters. The same game builds as a normal browser experience and as a submission-ready YouTube Playable. There is no promised next game; the project reopens only for a specific mechanic worth studying.</p>
+  <p class="proof__copy">The reusable gamekit owns the loop, versioned saves, offline progress, pause behavior, and platform adapters. The same game builds as a normal browser experience and as a submission-ready YouTube Playable. There is no promised next game; the project reopens only for a specific mechanic worth studying. Microsoft Clarity measures visits to this hub only; the game and YouTube bundle remain analytics-free.</p>
 `;
 main.append(proof);
 
