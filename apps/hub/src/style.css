@@ -210,6 +210,24 @@ h1 {
   line-height: 1.7;
 }
 
+.site-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: clamp(28px, 5vw, 48px);
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.site-footer a {
+  display: inline-flex;
+  color: var(--text-faint);
+  transition: color 0.15s ease;
+}
+
+.site-footer a:hover {
+  color: var(--text);
+}
+
 .game-card__play {
   color: var(--cash);
 }
