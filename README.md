@@ -74,3 +74,23 @@ gamekit · **no external requests** (fonts bundled via @fontsource) · relative
 paths (`base:'./'`) · all aspect ratios + live resize · touch + mouse ·
 pause halts everything · saves only via SDK (web build falls back to
 localStorage).
+
+
+## Shareability verification and retained work — 2026-09-07
+
+The live desktop browser experiment is shareable within its stated parked-game
+scope. Fresh Chrome verification opened the public hub and retained Idle Startup
+save, purchased the $80K CI pipeline upgrade, and observed net income increase
+from about $1.03K to $1.99K per game day with payroll unchanged at $900/day.
+Closing and reopening the game retained the upgrade, changed revenue and existing
+team. The desktop game rendered a readable two-column company/org layout with
+illustrated office, visible costs and revenue trade-offs.
+
+This verifies a real upgrade decision and resumed browser persistence, not a new
+player onboarding run, full economy balance, mobile/touch behavior or YouTube
+certification. Those remain qualification work if broader distribution is pursued;
+the parked research decision and no-promised-next-game boundary remain intact.
+The public hub footer still contains a retired Journal link from the externally
+served studio footer; its deployed projection needs refresh separately.
+
+Task reconciliation found no open GitHub issues on this date; none were closed.
